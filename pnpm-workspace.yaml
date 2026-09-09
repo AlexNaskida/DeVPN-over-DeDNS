@@ -3,3 +3,4 @@ packages:
   - "packages/*"
   - "packages/chain-adapters/*"
   - "packages/identity/*"
+  - "relay/handler_cre/tunnel-server"
