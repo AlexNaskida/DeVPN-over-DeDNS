@@ -27,7 +27,7 @@ simulated" breakdown as later phases land (tracked in `docs/SECURITY.md` once wr
 | Phase | Scope | Status |
 |---|---|---|
 | 0 | Monorepo scaffold, session-spec, ui tokens, CI | ✅ done (`v0.1-phase0`) |
-| 1 | ENSv2 registry + watchdog contract | 🟡 code + tests done, **not yet deployed** — see below |
+| 1 | ENSv2 registry + watchdog contract | 🟡 code + tests done, **not yet deployed** |
 | 2 | Arc + x402 session purchase | not started |
 | 3 | Chainlink CRE relay handler | not started |
 | 4 | Orchestrator + web app | not started |
