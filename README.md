@@ -27,11 +27,27 @@ simulated" breakdown as later phases land (tracked in `docs/SECURITY.md` once wr
 | Phase | Scope | Status |
 |---|---|---|
 | 0 | Monorepo scaffold, session-spec, ui tokens, CI | ✅ done (`v0.1-phase0`) |
-| 1 | ENSv2 registry + watchdog contract | not started |
+| 1 | ENSv2 registry + watchdog contract | 🟡 code + tests done, **not yet deployed** — see below |
 | 2 | Arc + x402 session purchase | not started |
 | 3 | Chainlink CRE relay handler | not started |
 | 4 | Orchestrator + web app | not started |
 | 5 | Hardening, docs, demo | not started |
+
+**Phase 1 detail — what's real vs. what's still pending:**
+
+- `contracts/ens/src/WatchdogRevoker.sol` — implemented, 6 passing Foundry tests
+  (valid attestation passes, tampered attestation revokes, double-revoke is a no-op,
+  submitting is permissionless but only the watchdog's own address can execute the
+  revoke, admin fallback, honestly-stubbed misbehavior-proof).
+- `packages/identity/ens` — ENSv2 registration/capability-record client, built and
+  tested against the real `ensdomains/contracts-v2` source.
+- `contracts/ens/script/DeploySepoliaInfra.s.sol` — the one-time infra deploy,
+  verified via a **Sepolia fork dry-run** (no funds spent, nothing broadcast).
+- **Not done:** nothing has actually been deployed to Sepolia. No operator has been
+  registered on-chain. The "tampered attestation → automatic revoke" flow has not
+  been run live. Phase 1's Definition of Done requires this to be real and demoable
+  on camera — that still needs a funded wallet to run the deploy script for real; see
+  [`docs/ensv2-sepolia-deploy.md`](docs/ensv2-sepolia-deploy.md).
 
 ## Repo layout
 
