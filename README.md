@@ -46,8 +46,19 @@ simulated" breakdown as later phases land (tracked in `docs/SECURITY.md` once wr
 ## Developing
 
 ```bash
+git submodule update --init --recursive  # contracts/ens/lib/contracts-v2
 pnpm install
 pnpm lint
 pnpm typecheck
 pnpm test
 ```
+
+Solidity contracts (`contracts/ens`) are a separate Foundry project:
+
+```bash
+cd contracts/ens
+forge test
+```
+
+See [`docs/ensv2-sepolia-deploy.md`](docs/ensv2-sepolia-deploy.md) for deploying the
+ENSv2 registry/resolver/watchdog infra to Sepolia.
