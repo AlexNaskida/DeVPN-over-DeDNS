@@ -1,11 +1,15 @@
 import type { FastifyInstance } from "fastify";
-import { TierSchema } from "@dvod/session-spec";
+import { TierSchema, issueSessionToken } from "@dvod/session-spec";
 
-import { SESSION_ESCROW_ADDRESS, ARC_TESTNET_CHAIN_ID, MAX_SESSION_HOURS } from "../config.js";
+import {
+  SESSION_ESCROW_ADDRESS,
+  ARC_TESTNET_CHAIN_ID,
+  MAX_SESSION_HOURS,
+  SESSION_TOKEN_SECRET,
+} from "../config.js";
 import { priceWei, priceDisplay } from "../pricing.js";
 import { eligibleOperators } from "../relays.js";
 import { verifySessionPurchase, PaymentVerificationError } from "../arc-client.js";
-import { issueSessionToken } from "../session-token.js";
 
 /** Replay protection — a real deployment would persist this (Phase 4's Postgres). */
 const usedTxHashes = new Set<string>();
@@ -74,13 +78,16 @@ export function registerSessionsRoute(app: FastifyInstance) {
 
         const relay = eligible[0]!;
         const expiresAt = Math.floor(Date.now() / 1000) + hours * 3600;
-        const token = issueSessionToken({
-          sessionId: Number(sessionId),
-          relay: relay.operator,
-          tier,
-          hours,
-          expiresAt,
-        });
+        const token = issueSessionToken(
+          {
+            sessionId: Number(sessionId),
+            relay: relay.operator,
+            tier,
+            hours,
+            expiresAt,
+          },
+          SESSION_TOKEN_SECRET,
+        );
 
         return reply.send({
           token,
