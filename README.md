@@ -19,7 +19,7 @@ it expires or the watchdog contract revokes the relay.
 
 ## Status
 
-Phases 0 and 1 are complete — see the [build phases](#build-phases) below. This
+Phases 0, 1, and 2 are complete — see the [build phases](#build-phases) below. This
 section will grow into a proper quickstart, threat model summary, and "what's real vs.
 simulated" breakdown as later phases land (tracked in `docs/SECURITY.md` once written).
 
@@ -29,10 +29,27 @@ simulated" breakdown as later phases land (tracked in `docs/SECURITY.md` once wr
 |---|---|---|
 | 0 | Monorepo scaffold, session-spec, ui tokens, CI | ✅ done (`v0.1-phase0`) |
 | 1 | ENSv2 registry + watchdog contract | ✅ done (`v0.2-phase1`) |
-| 2 | Arc + x402 session purchase | not started |
+| 2 | Arc + x402 session purchase | ✅ done (`v0.3-phase2`) |
 | 3 | Chainlink CRE relay handler | not started |
 | 4 | Orchestrator + web app | not started |
 | 5 | Hardening, docs, demo | not started |
+
+**Phase 2 — what's real, on Arc testnet, right now:**
+
+- `contracts/arc/src/SessionEscrow.sol` deployed live (see
+  [`docs/arc-testnet-deploy.md`](docs/arc-testnet-deploy.md)) — USDC is Arc's native
+  gas/value token, so `purchaseSession` is a plain payable transaction, not an
+  ERC-20 flow.
+- A real 1-hour Standard session was purchased for real (0.35 USDC), and a
+  wrong-amount attempt was rejected before broadcasting — both verifiable on-chain.
+- `apps/orchestrator` serves `GET /tiers` (live ENSv2 eligibility counts — correctly
+  excludes `bob`, revoked in Phase 1) and `POST /sessions/:tier/:hours` (a 402 quote,
+  then a signed session token once a real `purchaseSession` tx is verified against
+  the chain). Tested end-to-end against the actual live deployment, not mocks.
+- **Architecture note:** x402 v2's real settlement moves an asset to `payTo`, with no
+  generic-calldata path for calling a specific contract function — so the quote
+  points the client at `purchaseSession` directly rather than routing through an
+  x402 facilitator. See `docs/arc-testnet-deploy.md` for the full reasoning.
 
 **Phase 1 — what's real, on Sepolia, right now:**
 
