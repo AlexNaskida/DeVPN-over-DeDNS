@@ -19,7 +19,7 @@ it expires or the watchdog contract revokes the relay.
 
 ## Status
 
-Phase 0 (foundations) is complete — see the [build phases](#build-phases) below. This
+Phases 0 and 1 are complete — see the [build phases](#build-phases) below. This
 section will grow into a proper quickstart, threat model summary, and "what's real vs.
 simulated" breakdown as later phases land (tracked in `docs/SECURITY.md` once written).
 
@@ -28,27 +28,31 @@ simulated" breakdown as later phases land (tracked in `docs/SECURITY.md` once wr
 | Phase | Scope | Status |
 |---|---|---|
 | 0 | Monorepo scaffold, session-spec, ui tokens, CI | ✅ done (`v0.1-phase0`) |
-| 1 | ENSv2 registry + watchdog contract | 🟡 code + tests done, **not yet deployed** |
+| 1 | ENSv2 registry + watchdog contract | ✅ done (`v0.2-phase1`) |
 | 2 | Arc + x402 session purchase | not started |
 | 3 | Chainlink CRE relay handler | not started |
 | 4 | Orchestrator + web app | not started |
 | 5 | Hardening, docs, demo | not started |
 
-**Phase 1 detail — what's real vs. what's still pending:**
+**Phase 1 — what's real, on Sepolia, right now:**
 
-- `contracts/ens/src/WatchdogRevoker.sol` — implemented, 6 passing Foundry tests
-  (valid attestation passes, tampered attestation revokes, double-revoke is a no-op,
-  submitting is permissionless but only the watchdog's own address can execute the
-  revoke, admin fallback, honestly-stubbed misbehavior-proof).
-- `packages/identity/ens` — ENSv2 registration/capability-record client, built and
-  tested against the real `ensdomains/contracts-v2` source.
-- `contracts/ens/script/DeploySepoliaInfra.s.sol` — the one-time infra deploy,
-  verified via a **Sepolia fork dry-run** (no funds spent, nothing broadcast).
-- **Not done:** nothing has actually been deployed to Sepolia. No operator has been
-  registered on-chain. The "tampered attestation → automatic revoke" flow has not
-  been run live. Phase 1's Definition of Done requires this to be real and demoable
-  on camera — that still needs a funded wallet to run the deploy script for real; see
-  [`docs/ensv2-sepolia-deploy.md`](docs/ensv2-sepolia-deploy.md).
+- `contracts/ens/src/WatchdogRevoker.sol`, a shared `PermissionedResolver` proxy, and
+  a subregistry are deployed live on Sepolia (see
+  [`docs/ensv2-sepolia-deploy.md`](docs/ensv2-sepolia-deploy.md) for every address and
+  tx hash).
+- Two relay operators, `bob.dvod-test.eth` and `carol.dvod-test.eth`, are registered
+  on-chain with real capability records — operational key holds only
+  endpoint/tiers/attestation-hash roles, `WatchdogRevoker` alone holds the status
+  role, payout address is never delegated to the operational key.
+- The automatic revoke was run live: a deliberately mismatched attestation report was
+  submitted permissionlessly to `WatchdogRevoker`, which itself flipped bob's status
+  from `active` to `revoked` on-chain (tx
+  `0xef1189e7299c8d60e4c5c971c0cab95fb0d538d70c7aed10c8d297b99a49b7f0`) — no human
+  admin transaction involved.
+- **Honesty note:** both operators' `attestation_build_hash` is a documented **STUB**
+  (`keccak256("STUB: no real CRE handler binary yet for <name>")`) — Phase 3's actual
+  Chainlink CRE handler doesn't exist yet, so there's no genuine build to hash. The
+  revoke logic above is real; what it's checking against is not, yet.
 
 ## Repo layout
 
