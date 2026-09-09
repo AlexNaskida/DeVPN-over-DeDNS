@@ -80,6 +80,9 @@ importers:
         specifier: ^3.23.0
         version: 3.25.76
     devDependencies:
+      '@types/node':
+        specifier: ^22.9.0
+        version: 22.20.1
       typescript:
         specifier: ^5.6.0
         version: 5.9.3
@@ -92,6 +95,25 @@ importers:
       typescript:
         specifier: ^5.6.0
         version: 5.9.3
+
+  relay/handler_cre/tunnel-server:
+    dependencies:
+      '@dvod/session-spec':
+        specifier: workspace:*
+        version: link:../../../packages/session-spec
+    devDependencies:
+      '@types/node':
+        specifier: ^22.9.0
+        version: 22.20.1
+      tsx:
+        specifier: ^4.23.13
+        version: 4.23.13
+      typescript:
+        specifier: ^5.6.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.20.1)
 
 packages:
 
