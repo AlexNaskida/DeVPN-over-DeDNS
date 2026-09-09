@@ -16,6 +16,7 @@ Payment and permission checks (ENSv2 registry lookup, attestation check, x402 pu
 on Arc) all complete **before** any tunnel opens. Once open, the session runs fully
 anonymous — DNS + proxy traffic inside the relay's attested confidential handler — until
 it expires or the watchdog contract revokes the relay.
+
 ## Status
 
 Phase 0 (foundations) is complete — see the [build phases](#build-phases) below. This
