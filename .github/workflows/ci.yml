@@ -24,10 +24,13 @@ jobs:
 
   contracts:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: [contracts/ens, contracts/arc]
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
       - uses: foundry-rs/foundry-toolchain@v1
       - run: forge test -vv
-        working-directory: contracts/ens
+        working-directory: ${{ matrix.project }}
