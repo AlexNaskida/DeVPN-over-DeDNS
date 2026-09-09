@@ -52,14 +52,32 @@ from Chainlink's own `keeper-bot-ts` template, that does exactly that.
 - **9 Foundry tests** on the receiver contract + watchdog, **3 Bun tests** on the CRE
   workflow itself (mocking the real generated bindings, not hand-rolled fakes).
 
-### The one real limitation left, honestly
+### Fully confirmed live — the whole pipeline, on-chain
+
+After waiting out Sepolia finality (below), `cre workflow simulate ... --broadcast`
+ran the complete real pipeline: CRE read `AttestationRefresherReceiver.RESOLVER()`
+live, computed a fresh hash, produced a DON-signed report, and wrote it through the
+real KeystoneForwarder. Confirmed independently via `cast`:
+
+- Tx `0x72484a47fd657926c6ad672574b5cf074e8be46412e6031f08246d1b0a75c429` — `status: 1`
+- `carol.dvod-test.eth`'s `dvod.attestation_build_hash` on the live resolver now
+  reads `0xaa9e8c634ead1b91604c754c0ae6494c0e0c382bcada5a06ad61a998439b6e52` — exactly
+  what the workflow computed and logged.
+
+This is the real thing, not a description of how it would work: CRE execution → DON
+consensus → signed report → KeystoneForwarder → our receiver → the resolver, checked
+independently after the fact rather than trusted from the CLI's own output.
+
+### The one real limitation hit along the way, honestly
 
 **Sepolia finality lag.** CRE's `EVMClient` reads use the chain's *last finalized*
 block (a deliberate DON-consensus safety choice, not a bug) — after deploying a fresh
 contract, it can take ~15-20 minutes for finality to catch up before CRE can read it.
 We hit this directly: a `cre workflow simulate` run failed with `Cannot decode zero
 data ("0x")` reading our freshly-deployed receiver, and confirmed via `cast code
---block finalized` that the finalized block genuinely predated our deployment.
+--block finalized` that the finalized block genuinely predated our deployment. Waited
+it out (polled `cast block finalized` until it passed our deploy block) and reran
+successfully — see above.
 
 ### Still a STUB, honestly
 

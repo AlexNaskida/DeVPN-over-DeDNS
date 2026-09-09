@@ -19,9 +19,10 @@ it expires or the watchdog contract revokes the relay.
 
 ## Status
 
-Phases 0, 1, and 2 are complete — see the [build phases](#build-phases) below. This
-section will grow into a proper quickstart, threat model summary, and "what's real vs.
-simulated" breakdown as later phases land (tracked in `docs/SECURITY.md` once written).
+Phases 0, 1, and 2 are complete, Phase 3 is functionally done pending a tag — see the
+[build phases](#build-phases) below. This section will grow into a proper quickstart,
+threat model summary, and "what's real vs. simulated" breakdown as later phases land
+(tracked in `docs/SECURITY.md` once written).
 
 ## Build phases
 
@@ -30,9 +31,32 @@ simulated" breakdown as later phases land (tracked in `docs/SECURITY.md` once wr
 | 0 | Monorepo scaffold, session-spec, ui tokens, CI | ✅ done (`v0.1-phase0`) |
 | 1 | ENSv2 registry + watchdog contract | ✅ done (`v0.2-phase1`) |
 | 2 | Arc + x402 session purchase | ✅ done (`v0.3-phase2`) |
-| 3 | Chainlink CRE relay handler | not started |
+| 3 | Chainlink CRE relay handler | ✅ done — real tunnel + real CRE attestation job |
 | 4 | Orchestrator + web app | not started |
 | 5 | Hardening, docs, demo | not started |
+
+**Phase 3 — the honesty-critical phase, resolved with a real finding:**
+
+Verified directly against `docs.chain.link/cre` (see
+[`docs/chainlink-cre-findings.md`](docs/chainlink-cre-findings.md)): CRE workflows
+are event-driven and stateless and categorically cannot run a persistent
+tunnel-termination/DNS/proxy server — not "not in the time available," a real
+platform-shape mismatch the brief itself didn't anticipate this sharply. So:
+
+- `relay/handler_cre/tunnel-server` is a **real, working HTTP CONNECT proxy** — real
+  DNS resolution, real bidirectional proxying, verified with an actual live fetch of
+  `https://example.com` through it — running in a plain process with a visible
+  **SIMULATED** badge (`GET /health`), because CRE can't run it.
+- `relay/handler_cre/attestation-refresher` is a **real Chainlink CRE workflow**
+  (Chainlink's own `keeper-bot-ts` template, adapted), genuinely executed via the
+  real CRE CLI: compiled to actual WASM, read live Sepolia state, produced a
+  DON-signed report, and wrote through the real KeystoneForwarder to
+  `contracts/ens/src/AttestationRefresherReceiver.sol` — confirmed independently
+  on-chain afterward, not just trusted from the CLI's own output.
+- **Honesty note:** the hash being attested is still a documented STUB — there's no
+  real relay build artifact to hash yet. What's real is the full pipeline (CRE
+  execution → DON consensus → signed report → on-chain write); what's not yet real is
+  the input.
 
 **Phase 2 — what's real, on Arc testnet, right now:**
 
@@ -76,8 +100,9 @@ simulated" breakdown as later phases land (tracked in `docs/SECURITY.md` once wr
 ```
 /apps            web app + orchestrator service
 /packages        session-spec, ui, chain-adapters, identity
-/relay           Chainlink CRE confidential handler + relay node image
-/contracts       SessionEscrow.sol (Arc), WatchdogRevoker.sol (ENS)
+/relay/handler_cre/tunnel-server         real, SIMULATED-labeled tunnel/DNS/proxy
+/relay/handler_cre/attestation-refresher real Chainlink CRE workflow (Bun/CRE CLI project)
+/contracts       SessionEscrow.sol (Arc), WatchdogRevoker.sol + AttestationRefresherReceiver.sol (ENS)
 /docs            architecture diagram, security/pricing docs, demo script
 ```
 
