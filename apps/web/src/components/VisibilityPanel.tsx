@@ -22,7 +22,7 @@ const ROWS: Row[] = [
   },
   {
     who: "Your assigned relay operator's process",
-    sees: "Your DNS queries and proxied traffic, in the clear, inside its own tunnel-termination process - the confidential-compute claim (traffic invisible even to the relay operator) is not real yet. See the Trust page.",
+    sees: "Your DNS queries and proxied traffic, in the clear, inside its own tunnel-termination process - the confidential-compute claim (traffic invisible even to the relay operator) is not real yet.",
     status: "simulated",
   },
 ];

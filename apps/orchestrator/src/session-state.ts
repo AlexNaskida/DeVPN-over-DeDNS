@@ -10,6 +10,7 @@ export interface SessionEventRow {
   tier: Tier | null;
   detail: string | null;
   createdAt: string;
+  expiresAt: string | null;
 }
 
 export class InvalidTransitionError extends Error {}
@@ -23,7 +24,7 @@ export class InvalidTransitionError extends Error {}
 export async function recordTransition(
   sessionId: string,
   toState: SessionState,
-  options: { relay?: string; tier?: Tier; detail?: string } = {},
+  options: { relay?: string; tier?: Tier; detail?: string; expiresAt?: number } = {},
 ): Promise<SessionEventRow> {
   const current = await getCurrentState(sessionId);
 
@@ -38,14 +39,23 @@ export async function recordTransition(
   }
 
   const tier = options.tier ?? (await getTier(sessionId));
+  const expiresAt = options.expiresAt ? new Date(options.expiresAt * 1000) : null;
 
   const { rows } = await pool.query(
-    `INSERT INTO session_events (session_id, from_state, to_state, relay, tier, detail)
-     VALUES ($1, $2, $3, $4, $5, $6)
-     RETURNING id, session_id, from_state, to_state, relay, tier, detail, created_at`,
-    [sessionId, current, toState, options.relay ?? null, tier ?? null, options.detail ?? null],
+    `INSERT INTO session_events (session_id, from_state, to_state, relay, tier, detail, expires_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     RETURNING id, session_id, from_state, to_state, relay, tier, detail, created_at, expires_at`,
+    [sessionId, current, toState, options.relay ?? null, tier ?? null, options.detail ?? null, expiresAt],
   );
   return toRow(rows[0]);
+}
+
+export async function getExpiresAt(sessionId: string): Promise<string | null> {
+  const { rows } = await pool.query(
+    `SELECT expires_at FROM session_events WHERE session_id = $1 AND expires_at IS NOT NULL ORDER BY id DESC LIMIT 1`,
+    [sessionId],
+  );
+  return rows[0]?.expires_at ? new Date(rows[0].expires_at).toISOString() : null;
 }
 
 export async function getTier(sessionId: string): Promise<Tier | null> {
@@ -58,7 +68,7 @@ export async function getTier(sessionId: string): Promise<Tier | null> {
 
 export async function getSessionEvents(sessionId: string): Promise<SessionEventRow[]> {
   const { rows } = await pool.query(
-    `SELECT id, session_id, from_state, to_state, relay, tier, detail, created_at
+    `SELECT id, session_id, from_state, to_state, relay, tier, detail, created_at, expires_at
      FROM session_events WHERE session_id = $1 ORDER BY id ASC`,
     [sessionId],
   );
@@ -90,6 +100,7 @@ function toRow(row: {
   tier: string | null;
   detail: string | null;
   created_at: Date;
+  expires_at: Date | null;
 }): SessionEventRow {
   return {
     id: row.id,
@@ -100,5 +111,6 @@ function toRow(row: {
     tier: row.tier as Tier | null,
     detail: row.detail,
     createdAt: row.created_at.toISOString(),
+    expiresAt: row.expires_at ? row.expires_at.toISOString() : null,
   };
 }

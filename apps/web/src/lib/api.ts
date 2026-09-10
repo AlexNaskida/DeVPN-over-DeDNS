@@ -81,12 +81,14 @@ export interface SessionEvent {
   tier: string | null;
   detail: string | null;
   createdAt: string;
+  expiresAt: string | null;
 }
 
 export interface SessionDetail {
   sessionId: string;
   state: string;
   relay: string | null;
+  expiresAt: string | null;
   events: SessionEvent[];
 }
 

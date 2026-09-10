@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { getCurrentState, getCurrentRelay, getSessionEvents } from "../session-state.js";
+import { getCurrentState, getCurrentRelay, getExpiresAt, getSessionEvents } from "../session-state.js";
 
 /** `GET /sessions/:id` - session detail: state, relay, expiry, visibility log. */
 export function registerSessionDetailRoute(app: FastifyInstance) {
@@ -14,6 +14,7 @@ export function registerSessionDetailRoute(app: FastifyInstance) {
       sessionId: id,
       state: await getCurrentState(id),
       relay: await getCurrentRelay(id),
+      expiresAt: await getExpiresAt(id),
       events,
     });
   });
