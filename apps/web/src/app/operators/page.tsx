@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getRelays, getRelayAttestation, type RelayInfo, type RelayAttestation } from "@/lib/api";
+import { SkeletonCard } from "@/components/SkeletonCard";
 
 function truncateHash(hash: string): string {
   if (hash.length <= 18) return hash;
@@ -9,7 +10,7 @@ function truncateHash(hash: string): string {
 }
 
 export default function OperatorsPage() {
-  const [relays, setRelays] = useState<RelayInfo[]>([]);
+  const [relays, setRelays] = useState<RelayInfo[] | null>(null);
   const [attestations, setAttestations] = useState<Record<string, RelayAttestation>>({});
   const [copied, setCopied] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +46,9 @@ export default function OperatorsPage() {
       {error && <p style={{ color: "var(--destructive)" }}>{error}</p>}
 
       <div style={{ display: "grid", gap: 14 }}>
-        {relays.map((relay) => {
+        {relays === null
+          ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} lines={2} />)
+          : relays.map((relay) => {
           const status = relay.status.toLowerCase();
           const active = status === "active";
           const attestation = attestations[relay.operator];
@@ -137,8 +140,8 @@ export default function OperatorsPage() {
                 </button>
               )}
             </div>
-          );
-        })}
+              );
+            })}
       </div>
     </div>
   );
