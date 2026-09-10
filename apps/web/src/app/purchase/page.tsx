@@ -16,6 +16,25 @@ const publicClient = createPublicClient({ chain: arcTestnet, transport: http() }
 
 type Step = "idle" | "quoting" | "paying" | "confirming" | "done";
 
+/** Never show a raw viem/wallet error dump (full ABI-decoded call, docs link, request
+ * args, etc.) - a rejected transaction is an expected user action, not a bug.
+ * viem wraps the wallet's actual rejection inside nested `.cause`s rather than the
+ * top-level message/shortMessage, so this walks the whole chain rather than just
+ * checking the outermost error. */
+function isUserRejection(e: unknown, depth = 0): boolean {
+  if (!e || depth > 6) return false;
+  const err = e as { code?: number; message?: string; cause?: unknown };
+  if (err.code === 4001) return true;
+  if (typeof err.message === "string" && /user rejected|user denied/i.test(err.message)) return true;
+  return isUserRejection(err.cause, depth + 1);
+}
+
+function friendlyError(e: unknown): string {
+  if (isUserRejection(e)) return "Transaction cancelled.";
+  const shortMessage = (e as { shortMessage?: string } | undefined)?.shortMessage;
+  return shortMessage ?? (e instanceof Error ? e.message : String(e));
+}
+
 export default function PurchasePage() {
   const router = useRouter();
   const { account, connectedProvider, openModal } = useWallet();
@@ -67,7 +86,7 @@ export default function PurchasePage() {
       setStep("done");
       router.push(`/session/${result.sessionId}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(friendlyError(e));
       setStep("idle");
     }
   }
