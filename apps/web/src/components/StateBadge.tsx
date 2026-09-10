@@ -1,4 +1,4 @@
-const STATE_COLOR: Record<string, string> = {
+export const STATE_COLOR: Record<string, string> = {
   ACTIVE: "var(--primary)",
   TUNNEL_OPEN: "var(--primary)",
   TOKEN_ISSUED: "var(--secondary)",
