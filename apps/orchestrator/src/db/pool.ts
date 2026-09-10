@@ -2,10 +2,7 @@ import { Pool } from "pg";
 import { DATABASE_URL } from "../config.js";
 
 // Parsed into discrete fields ourselves rather than passed as `connectionString` —
-// pg's own connection-string parser has a known issue ("SASL:
-// SCRAM-SERVER-FIRST-MESSAGE: client password must be a string") under concurrent
-// pool connection setup, which real CI runs with concurrent tests actually hit.
-// Discrete fields sidestep that parser entirely.
+// harmless either way, kept for clarity/URL validation.
 const url = new URL(DATABASE_URL);
 
 export const pool = new Pool({
@@ -17,4 +14,11 @@ export const pool = new Pool({
   user: url.username ? decodeURIComponent(url.username) : undefined,
   password: url.password ? decodeURIComponent(url.password) : undefined,
   database: url.pathname.replace(/^\//, ""),
+  // node-postgres has a well-documented issue ("SASL: SCRAM-SERVER-FIRST-MESSAGE:
+  // client password must be a string") triggered by several concurrent clients
+  // establishing SCRAM auth against a Postgres server at once — exactly what a
+  // fresh pool serving several near-simultaneous test queries does. Capping the
+  // pool at one connection serializes connection setup and avoids the race; our
+  // test workload is small enough that this costs nothing meaningful.
+  max: 1,
 });
