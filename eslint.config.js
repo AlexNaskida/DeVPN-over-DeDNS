@@ -5,6 +5,8 @@ export default tseslint.config(
     ignores: [
       "**/dist/**",
       "**/.next/**",
+      "**/.open-next/**", // OpenNext/Cloudflare build output, gitignored, not ours to lint
+      "**/.wrangler/**",
       "**/.turbo/**",
       "**/node_modules/**",
       "**/next-env.d.ts", // Next-generated, gitignored, not ours to lint

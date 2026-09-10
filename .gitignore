@@ -5,6 +5,8 @@ dist/
 out/
 next-env.d.ts
 *.tsbuildinfo
+.open-next/
+.wrangler/
 .env
 .env.local
 *.log
