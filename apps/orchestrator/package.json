@@ -15,7 +15,7 @@
     "@dvod/session-spec": "workspace:*",
     "@fastify/websocket": "^11.3.0",
     "fastify": "^5.12.3",
-    "pg": "^8.23.0",
+    "pg": "8.13.1",
     "viem": "^2.56.3",
     "ws": "^8.21.3",
     "zod": "^3.23.0"
