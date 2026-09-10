@@ -29,25 +29,6 @@ body {
   }
 }
 
-@keyframes floatSlow {
-  0%,
-  100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-10px) rotate(2deg);
-  }
-}
-
-@keyframes ringPulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(46, 125, 107, 0.35);
-  }
-  100% {
-    box-shadow: 0 0 0 22px rgba(46, 125, 107, 0);
-  }
-}
-
 .fade-in-up {
   animation: fadeInUp 0.6s ease both;
 }

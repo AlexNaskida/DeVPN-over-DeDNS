@@ -54,8 +54,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   }, [providers, connectedProvider]);
 
   useEffect(() => {
-    const on = connectedProvider?.provider.on;
-    if (!on) return;
+    const provider = connectedProvider?.provider;
+    // MetaMask's real provider is a class instance whose .on relies on `this` -
+    // destructuring the method off the object (`const on = provider.on`) detaches
+    // it and breaks internally on call. Always invoke it as `provider.on(...)`.
+    if (!provider?.on) return;
 
     function handleAccountsChanged(...args: unknown[]) {
       const accounts = args[0] as string[];
@@ -68,8 +71,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    on("accountsChanged", handleAccountsChanged);
-    return () => connectedProvider?.provider.removeListener?.("accountsChanged", handleAccountsChanged);
+    provider.on("accountsChanged", handleAccountsChanged);
+    return () => provider.removeListener?.("accountsChanged", handleAccountsChanged);
   }, [connectedProvider]);
 
   const connect = useCallback(

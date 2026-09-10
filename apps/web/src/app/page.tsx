@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { HeroPolyhedron } from "@/components/HeroPolyhedron";
 
 const STEPS = [
   {
@@ -96,19 +96,18 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "center", position: "relative" }}>
-          <div
+        <div style={{ position: "relative" }}>
+          <HeroPolyhedron />
+          <p
             style={{
-              position: "absolute",
-              width: 180,
-              height: 180,
-              borderRadius: "50%",
-              animation: "ringPulse 2.4s ease-out infinite",
+              textAlign: "center",
+              fontSize: 11,
+              color: "var(--muted-foreground)",
+              marginTop: -8,
             }}
-          />
-          <div style={{ animation: "floatSlow 6s ease-in-out infinite" }}>
-            <Image src="/logo.png" alt="DVoD" width={190} height={317} priority />
-          </div>
+          >
+            Drag to rotate
+          </p>
         </div>
       </section>
 
