@@ -1,5 +1,6 @@
 import Fastify from "fastify";
 import websocketPlugin from "@fastify/websocket";
+import corsPlugin from "@fastify/cors";
 
 import { registerTiersRoute } from "./routes/tiers.js";
 import { registerSessionsRoute } from "./routes/sessions.js";
@@ -10,6 +11,13 @@ import { registerStreamRoute } from "./routes/stream.js";
 
 export async function buildServer() {
   const app = Fastify({ logger: process.env.NODE_ENV !== "test" });
+  // The web app (apps/web, a separate origin in dev and likely in prod) calls this
+  // API directly from the browser - x-session-tx is a custom request header, so it
+  // must be explicitly allowed or the browser's preflight blocks it.
+  await app.register(corsPlugin, {
+    origin: true,
+    allowedHeaders: ["Content-Type", "x-session-tx"],
+  });
   await app.register(websocketPlugin);
 
   registerTiersRoute(app);

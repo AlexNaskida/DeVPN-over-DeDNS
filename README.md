@@ -19,8 +19,8 @@ it expires or the watchdog contract revokes the relay.
 
 ## Status
 
-Phases 0, 1, and 2 are complete, Phase 3 is functionally done pending a tag - see the
-[build phases](#build-phases) below. This section will grow into a proper quickstart,
+Phases 0-4 are complete - see the [build phases](#build-phases) below. This section
+will grow into a proper quickstart,
 threat model summary, and "what's real vs. simulated" breakdown as later phases land
 (tracked in `docs/SECURITY.md` once written).
 
@@ -32,10 +32,10 @@ threat model summary, and "what's real vs. simulated" breakdown as later phases 
 | 1 | ENSv2 registry + watchdog contract | ✅ done (`v0.2-phase1`) |
 | 2 | Arc + x402 session purchase | ✅ done (`v0.3-phase2`) |
 | 3 | Chainlink CRE relay handler | ✅ done - real tunnel + real CRE attestation job |
-| 4 | Orchestrator + web app | 🟡 orchestrator backend done, web app not started |
+| 4 | Orchestrator + web app | ✅ done (`v0.5-phase4`) |
 | 5 | Hardening, docs, demo | not started |
 
-**Phase 4 (orchestrator half) - what's real, verified live, not just unit-tested:**
+**Phase 4 - what's real, verified live, not just unit-tested:**
 
 - Real Postgres persistence (`session_events`) - every state transition is a row,
   validated against `packages/session-spec`'s actual transition table before being
@@ -51,8 +51,14 @@ threat model summary, and "what's real vs. simulated" breakdown as later phases 
 - Added a third registered operator, `dave.dvod-test.eth`, specifically so that
   failover demo has a real second active relay (`bob` is still revoked from Phase
   1's demo). See [`docs/orchestrator-state-machine.md`](docs/orchestrator-state-machine.md).
-- Not started yet: the actual Next.js web app (landing page, purchase flow, the
-  live dashboard's "what's visible to whom" panel, operator console, trust page).
+- `apps/web` (Next.js 15) - landing page, tier selection/purchase (real browser
+  wallet flow: connects via EIP-1193, sends the actual `purchaseSession` tx, confirms
+  with the orchestrator), a live session dashboard (`WS /stream`-driven event log +
+  "what's visible to whom" panel + the forced-failover demo button), an operator
+  console (live ENSv2 registry state + attestation lookup), and a trust page.
+  Verified end to end in a real browser against a real Arc-testnet purchase: the
+  dashboard received the full live failover sequence over its own WebSocket
+  connection with no page reload.
 
 **Phase 3 - the honesty-critical phase, resolved with a real finding:**
 
