@@ -1,4 +1,10 @@
-import { Pool } from "pg";
+// pg's named ESM export (`import { Pool } from "pg"`) is unreliable across
+// versions — it ships as CJS with irregular dual-package `exports`. Default
+// import + destructure is the standard-recommended workaround, independent of
+// version.
+import pg from "pg";
+const { Pool } = pg;
+
 import { DATABASE_URL } from "../config.js";
 
 // Parsed into discrete fields ourselves rather than passed as `connectionString` —
