@@ -13,19 +13,19 @@ function formatRemaining(ms: number): string {
 
 /** The one place --accent is used per packages/ui/src/tokens.ts's reserved-use
  * list ("live-session-countdown") - nowhere else in the app should reach for it. */
-export function CountdownTimer({ expiresAt }: { expiresAt: string | null }) {
+export function CountdownTimer({ expiresAt, ended = false }: { expiresAt: string | null; ended?: boolean }) {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    if (!expiresAt) return;
+    if (!expiresAt || ended) return;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, [expiresAt]);
+  }, [expiresAt, ended]);
 
   if (!expiresAt) return null;
 
   const remainingMs = new Date(expiresAt).getTime() - now;
-  const expired = remainingMs <= 0;
+  const expired = ended || remainingMs <= 0;
 
   return (
     <div
@@ -50,7 +50,7 @@ export function CountdownTimer({ expiresAt }: { expiresAt: string | null }) {
           color: expired ? "var(--muted-foreground)" : "var(--accent)",
         }}
       >
-        {formatRemaining(remainingMs)}
+        {ended ? "Ended" : formatRemaining(remainingMs)}
       </span>
     </div>
   );

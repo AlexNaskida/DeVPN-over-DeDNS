@@ -1,0 +1,37 @@
+name: Deploy web (Cloudflare Workers)
+
+# Deploys apps/web to Cloudflare Workers via the OpenNext adapter, only after
+# CI has passed on main - a deploy is never triggered off an unverified commit.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch: {} # manual retry, e.g. after fixing secrets - skips waiting for a new CI run
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @dvod/web cf:build
+        env:
+          # Baked into the static build - see apps/web/src/lib/api.ts. Update
+          # once the orchestrator has a real public URL (Cloudflare Tunnel).
+          NEXT_PUBLIC_ORCHESTRATOR_URL: ${{ vars.NEXT_PUBLIC_ORCHESTRATOR_URL }}
+          NEXT_PUBLIC_ORCHESTRATOR_WS_URL: ${{ vars.NEXT_PUBLIC_ORCHESTRATOR_WS_URL }}
+      - run: pnpm --filter @dvod/web exec wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
