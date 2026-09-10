@@ -17,7 +17,7 @@ const PRIMARY = "#2E7D6B";
  */
 function Polyhedron() {
   const group = useRef<THREE.Group>(null);
-  const geometry = useMemo(() => new THREE.IcosahedronGeometry(2.1, 1), []);
+  const geometry = useMemo(() => new THREE.IcosahedronGeometry(2.52, 1), []);
   const edges = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
   const vertexPositions = useMemo(() => {
     const pos = geometry.attributes.position;
@@ -66,8 +66,8 @@ function Polyhedron() {
 
 export function HeroPolyhedron() {
   return (
-    <div style={{ width: "100%", height: 380, cursor: "grab" }}>
-      <Canvas camera={{ position: [0, 0, 6.5], fov: 45 }} dpr={[1, 2]}>
+    <div style={{ width: "100%", height: 456, cursor: "grab" }}>
+      <Canvas camera={{ position: [0, 0, 7.2], fov: 45 }} dpr={[1, 2]}>
         <Polyhedron />
         <OrbitControls
           enableZoom={false}

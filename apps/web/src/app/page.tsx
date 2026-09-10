@@ -96,18 +96,8 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div style={{ position: "relative" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
           <HeroPolyhedron />
-          <p
-            style={{
-              textAlign: "center",
-              fontSize: 11,
-              color: "var(--muted-foreground)",
-              marginTop: -8,
-            }}
-          >
-            Drag to rotate
-          </p>
         </div>
       </section>
 
