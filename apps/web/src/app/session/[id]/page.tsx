@@ -5,6 +5,7 @@ import { getSessionDetail, forceRelayFailure, type SessionDetail, type SessionEv
 import { useSessionStream } from "@/lib/useSessionStream";
 import { StateBadge } from "@/components/StateBadge";
 import { VisibilityPanel } from "@/components/VisibilityPanel";
+import { CountdownTimer } from "@/components/CountdownTimer";
 
 export default function SessionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -48,9 +49,12 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
         <h1 style={{ fontSize: 24, margin: 0 }}>Session {id}</h1>
-        <StateBadge state={currentState} />
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <CountdownTimer expiresAt={detail.expiresAt} />
+          <StateBadge state={currentState} />
+        </div>
       </div>
       <p style={{ color: "var(--muted-foreground)", marginBottom: 32, fontSize: 14 }}>
         Relay: {currentRelay ?? "unassigned"}

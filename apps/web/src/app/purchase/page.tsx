@@ -5,19 +5,21 @@ import { useRouter } from "next/navigation";
 import { createPublicClient, http } from "viem";
 import type { Tier } from "@dvod/session-spec";
 import { getTiers, quoteSession, confirmSession, type TierInfo } from "@/lib/api";
-import { connectWallet, sendPurchaseTx, usdcPriceToWei, NoWalletError } from "@/lib/wallet";
+import { sendPurchaseTx, usdcPriceToWei } from "@/lib/wallet";
 import { arcTestnet } from "@/lib/chain";
+import { useWallet } from "@/lib/WalletContext";
+import { recordSessionPurchase } from "@/lib/sessionHistory";
 
 const publicClient = createPublicClient({ chain: arcTestnet, transport: http() });
 
-type Step = "idle" | "connecting" | "quoting" | "paying" | "confirming" | "done";
+type Step = "idle" | "quoting" | "paying" | "confirming" | "done";
 
 export default function PurchasePage() {
   const router = useRouter();
+  const { account, connectedProvider, openModal } = useWallet();
   const [tiers, setTiers] = useState<TierInfo[]>([]);
   const [selectedTier, setSelectedTier] = useState<Tier>("standard");
   const [hours, setHours] = useState(1);
-  const [account, setAccount] = useState<`0x${string}` | null>(null);
   const [step, setStep] = useState<Step>("idle");
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
@@ -28,20 +30,8 @@ export default function PurchasePage() {
       .catch((e: Error) => setError(e.message));
   }, []);
 
-  async function handleConnect() {
-    setError(null);
-    setStep("connecting");
-    try {
-      setAccount(await connectWallet());
-      setStep("idle");
-    } catch (e) {
-      setError(e instanceof NoWalletError ? e.message : String(e));
-      setStep("idle");
-    }
-  }
-
   async function handleBuy() {
-    if (!account) return;
+    if (!account || !connectedProvider) return;
     setError(null);
     try {
       setStep("quoting");
@@ -49,6 +39,7 @@ export default function PurchasePage() {
 
       setStep("paying");
       const hash = await sendPurchaseTx(
+        connectedProvider.provider,
         account,
         quote.extra.contract,
         selectedTier,
@@ -61,6 +52,15 @@ export default function PurchasePage() {
       setStep("confirming");
       const result = await confirmSession(selectedTier, hours, hash);
       sessionStorage.setItem(`dvod-session-token-${result.sessionId}`, result.token);
+      recordSessionPurchase({
+        sessionId: result.sessionId,
+        tier: result.tier,
+        hours: result.hours,
+        relay: result.relay,
+        txHash: result.txHash,
+        purchasedAt: Math.floor(Date.now() / 1000),
+        expiresAt: result.expiresAt,
+      });
 
       setStep("done");
       router.push(`/session/${result.sessionId}`);
@@ -74,10 +74,13 @@ export default function PurchasePage() {
   const busy = step !== "idle" && step !== "done";
 
   return (
-    <div>
-      <h1 style={{ fontSize: 24, marginBottom: 24 }}>Get a session</h1>
+    <div style={{ maxWidth: 480 }}>
+      <h1 style={{ fontSize: 26, marginBottom: 6 }}>Get a session</h1>
+      <p style={{ color: "var(--muted-foreground)", fontSize: 14, marginBottom: 28 }}>
+        One on-chain USDC payment on Arc testnet for a time-boxed session.
+      </p>
 
-      <div style={{ display: "grid", gap: 12, marginBottom: 28 }}>
+      <div style={{ display: "grid", gap: 10, marginBottom: 28 }}>
         {tiers.map((t) => (
           <button
             key={t.tier}
@@ -87,14 +90,12 @@ export default function PurchasePage() {
               textAlign: "left",
               padding: "16px 20px",
               borderRadius: "var(--radius)",
-              border:
-                selectedTier === t.tier
-                  ? "1px solid var(--accent)"
-                  : "1px solid var(--border)",
+              border: selectedTier === t.tier ? "1px solid var(--accent)" : "1px solid var(--border)",
               background: "var(--card)",
               color: "var(--foreground)",
               cursor: t.eligibleRelayCount === 0 ? "not-allowed" : "pointer",
               opacity: t.eligibleRelayCount === 0 ? 0.5 : 1,
+              transition: "border-color 0.15s ease",
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 600 }}>
@@ -140,8 +141,8 @@ export default function PurchasePage() {
       )}
 
       {!account ? (
-        <button onClick={handleConnect} disabled={busy} style={buttonStyle()}>
-          {step === "connecting" ? "Connecting..." : "Connect wallet"}
+        <button onClick={openModal} style={buttonStyle()}>
+          Connect wallet
         </button>
       ) : (
         <div>
@@ -158,14 +159,8 @@ export default function PurchasePage() {
         </div>
       )}
 
-      {txHash && (
-        <p style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 16 }}>
-          tx: {txHash}
-        </p>
-      )}
-      {error && (
-        <p style={{ color: "var(--destructive)", marginTop: 16, fontSize: 14 }}>{error}</p>
-      )}
+      {txHash && <p style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 16 }}>tx: {txHash}</p>}
+      {error && <p style={{ color: "var(--destructive)", marginTop: 16, fontSize: 14 }}>{error}</p>}
     </div>
   );
 }
