@@ -10,6 +10,8 @@ import {
 import { priceWei, priceDisplay } from "../pricing.js";
 import { eligibleOperators } from "../relays.js";
 import { verifySessionPurchase, PaymentVerificationError } from "../arc-client.js";
+import { recordTransition } from "../session-state.js";
+import { broadcast } from "../ws-hub.js";
 
 /** Replay protection — a real deployment would persist this (Phase 4's Postgres). */
 const usedTxHashes = new Set<string>();
@@ -78,6 +80,20 @@ export function registerSessionsRoute(app: FastifyInstance) {
 
         const relay = eligible[0]!;
         const expiresAt = Math.floor(Date.now() / 1000) + hours * 3600;
+        const sid = sessionId.toString();
+
+        // Drive the real state machine (brief §4/§6 Phase 4) — each transition is
+        // an event row, broadcast live to WS /stream as it happens.
+        for (const [toState, detail] of [
+          ["PAID", `paid via tx ${txHash}`],
+          ["TOKEN_ISSUED", undefined],
+          ["TUNNEL_OPEN", `relay ${relay.operator}`],
+          ["ACTIVE", undefined],
+        ] as const) {
+          const event = await recordTransition(sid, toState, { relay: relay.operator, tier, detail });
+          broadcast({ type: "session_transition", ...event });
+        }
+
         const token = issueSessionToken(
           {
             sessionId: Number(sessionId),

@@ -32,8 +32,27 @@ threat model summary, and "what's real vs. simulated" breakdown as later phases 
 | 1 | ENSv2 registry + watchdog contract | ✅ done (`v0.2-phase1`) |
 | 2 | Arc + x402 session purchase | ✅ done (`v0.3-phase2`) |
 | 3 | Chainlink CRE relay handler | ✅ done — real tunnel + real CRE attestation job |
-| 4 | Orchestrator + web app | not started |
+| 4 | Orchestrator + web app | 🟡 orchestrator backend done, web app not started |
 | 5 | Hardening, docs, demo | not started |
+
+**Phase 4 (orchestrator half) — what's real, verified live, not just unit-tested:**
+
+- Real Postgres persistence (`session_events`) — every state transition is a row,
+  validated against `packages/session-spec`'s actual transition table before being
+  written, not asserted.
+- Real `WS /stream` — verified with an actual WebSocket client watching live: a real
+  Arc-testnet purchase fed through the orchestrator produced
+  `PAID → TOKEN_ISSUED → TUNNEL_OPEN → ACTIVE` in real time.
+- The brief's own demo centerpiece (§9.3), triggered live: `POST /sessions/:id/
+  force-relay-failure` produced `ACTIVE → RELAY_UNREACHABLE → FAILOVER_SELECT →
+  TUNNEL_OPEN → ACTIVE` on a genuinely different relay, broadcast over the same WS
+  connection, then independently confirmed via `GET /sessions/:id`'s full 8-event
+  audit trail.
+- Added a third registered operator, `dave.dvod-test.eth`, specifically so that
+  failover demo has a real second active relay (`bob` is still revoked from Phase
+  1's demo). See [`docs/orchestrator-state-machine.md`](docs/orchestrator-state-machine.md).
+- Not started yet: the actual Next.js web app (landing page, purchase flow, the
+  live dashboard's "what's visible to whom" panel, operator console, trust page).
 
 **Phase 3 — the honesty-critical phase, resolved with a real finding:**
 

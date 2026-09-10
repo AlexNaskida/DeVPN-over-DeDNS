@@ -24,13 +24,28 @@ vi.mock("./arc-client.js", () => ({
   PaymentVerificationError: class PaymentVerificationError extends Error {},
 }));
 
+// This suite is about the HTTP/quote/payment-verification contract, not the state
+// machine's own persistence — that's covered by session-state.test.ts against a
+// real Postgres test database. Stub both out here to keep this suite fast/isolated.
+vi.mock("./session-state.js", () => ({
+  recordTransition: vi.fn(async (sessionId: string, toState: string, opts: Record<string, unknown>) => ({
+    id: 1,
+    sessionId,
+    fromState: null,
+    toState,
+    ...opts,
+    createdAt: new Date().toISOString(),
+  })),
+}));
+vi.mock("./ws-hub.js", () => ({ broadcast: vi.fn() }));
+
 describe("sessions route", () => {
   let app: FastifyInstance;
 
   beforeEach(async () => {
     vi.clearAllMocks();
     const { buildServer } = await import("./server.js");
-    app = buildServer();
+    app = await buildServer();
   });
 
   afterEach(async () => {
