@@ -15,7 +15,7 @@ export interface SessionEventRow {
 export class InvalidTransitionError extends Error {}
 
 /**
- * Records one state transition as an event row — per brief §6 Phase 4, the UI and
+ * Records one state transition as an event row - per brief §6 Phase 4, the UI and
  * audit trail are both just projections of this log. `PAID` is the first persisted
  * state (see migration comment); any later transition is checked against
  * session-spec's real transition table, not asserted.

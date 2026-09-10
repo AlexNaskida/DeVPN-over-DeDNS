@@ -20,7 +20,7 @@ export async function listOperators(): Promise<CapabilityRecord[]> {
   return records;
 }
 
-/** Active operators declaring support for `tier` — mirrors brief §7.1's lookup. */
+/** Active operators declaring support for `tier` - mirrors brief §7.1's lookup. */
 export async function eligibleOperators(tier: Tier): Promise<CapabilityRecord[]> {
   const operators = await listOperators();
   return operators.filter((op) => op.status === "active" && op.tiers_supported.includes(tier));

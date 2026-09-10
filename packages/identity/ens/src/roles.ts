@@ -4,7 +4,7 @@
  * `RegistryRolesLib.sol` (fetched 2026-09-09, `main` branch). Each role occupies one
  * nybble (4 bits); the paired admin role is the same bit shifted 128 bits higher.
  *
- * Only the subset DVoD actually uses is included — see those two files for the full
+ * Only the subset DVoD actually uses is included - see those two files for the full
  * role set (interface implementer, pubkey, ABI, alias, clear, etc.) if more is needed
  * later.
  */

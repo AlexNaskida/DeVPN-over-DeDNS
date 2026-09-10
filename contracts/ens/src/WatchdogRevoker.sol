@@ -6,13 +6,13 @@ import {CapabilityRecordKeys} from "./CapabilityRecordKeys.sol";
 
 /// @notice Holds the `ROLE_SET_DATA` permission (scoped to each registered operator's
 ///         `dvod.status` key) on the shared DVoD PermissionedResolver. Nothing else can
-///         flip an operator's status — see brief §2.3/§7.3.
+///         flip an operator's status - see brief §2.3/§7.3.
 ///
 ///         Anyone may *submit* a check or proof (`submitAttestationCheck`,
 ///         `submitMisbehaviorProof`); only this contract's own logic ever calls
 ///         `resolver.setData(..., STATUS, ...)`, and the resolver itself enforces that
-///         only an address holding that role — granted to this contract's address alone
-///         at operator registration — can succeed. A caller cannot revoke by calling the
+///         only an address holding that role - granted to this contract's address alone
+///         at operator registration - can succeed. A caller cannot revoke by calling the
 ///         resolver directly; they can only ask this contract to verify and act.
 contract WatchdogRevoker {
     IDvodResolver public immutable RESOLVER;
@@ -42,7 +42,7 @@ contract WatchdogRevoker {
     ///         provided attestation report's hash doesn't match the operator's own
     ///         published `dvod.attestation_build_hash` record. A valid (matching)
     ///         report passes with no state change.
-    /// @dev Permissionless to call — anyone can submit a check — but only this
+    /// @dev Permissionless to call - anyone can submit a check - but only this
     ///      contract's address can make the resulting `setData` call succeed.
     /// @return revoked True if this call caused a revoke; false if the attestation was
     ///         valid, or the operator was already revoked (no-op).
@@ -55,14 +55,14 @@ contract WatchdogRevoker {
     }
 
     /// @notice STUB: permissionless misbehavior-proof trigger (brief §2.3, stretch goal).
-    ///         Not implemented for Phase 1 — the attestation-failure trigger above and
+    ///         Not implemented for Phase 1 - the attestation-failure trigger above and
     ///         `adminRevoke` below are the two working revoke paths. Wire this up if
     ///         time allows; until then it reverts loudly rather than silently no-op'ing.
     function submitMisbehaviorProof(bytes32, bytes calldata) external pure {
         revert MisbehaviorProofNotImplemented();
     }
 
-    /// @notice Manual fallback revoke path — documented as such per brief §2.3/§7.3.
+    /// @notice Manual fallback revoke path - documented as such per brief §2.3/§7.3.
     ///         Only used because the misbehavior-proof trigger isn't built yet; swap the
     ///         demo to the automatic path once it is. This is a human admin key in the
     ///         happy-path loop, which the README must state plainly.

@@ -6,7 +6,7 @@ import {IDvodResolver} from "../../src/interfaces/IDvodResolver.sol";
 /// @notice Mimics the one invariant of ENSv2's real PermissionedResolver that
 ///         WatchdogRevoker's security depends on: `setData(node, key, ...)` only
 ///         succeeds for whichever address was granted `ROLE_SET_DATA` scoped to
-///         `(node, partHash(key))` — not for an arbitrary caller. Real role-granting
+///         `(node, partHash(key))` - not for an arbitrary caller. Real role-granting
 ///         (`authorizeDataRoles`) is out of scope for this mock; `setWriter` stands in
 ///         for "the resolver's real EAC role table says this address may write this key
 ///         for this node."

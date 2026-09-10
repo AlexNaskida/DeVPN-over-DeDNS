@@ -36,7 +36,7 @@ export class PaymentVerificationError extends Error {}
 /**
  * Verifies a real `SessionEscrow.purchaseSession` transaction: mined, successful,
  * on our contract, for exactly the requested (tier, hours, price). This reads a
- * public tx receipt and decodes a known event log — not a signature/crypto
+ * public tx receipt and decodes a known event log - not a signature/crypto
  * reimplementation, so it doesn't fall under the brief's "don't hand-roll payment
  * verification" rule (that's about x402/facilitator-style authorization schemes).
  */

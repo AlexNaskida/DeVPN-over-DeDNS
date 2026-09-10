@@ -16,7 +16,7 @@ function sign(payload: string, secret: string): string {
 /**
  * `{relay, tier, expires}` signed and time-boxed, per brief §2.4 step 5. Shared
  * between the orchestrator (issues) and the relay tunnel handler (verifies), so
- * both sides always agree on format — pass the same `secret` to both.
+ * both sides always agree on format - pass the same `secret` to both.
  */
 export function issueSessionToken(payload: SessionTokenPayload, secret: string): string {
   const body = Buffer.from(JSON.stringify(payload)).toString("base64url");

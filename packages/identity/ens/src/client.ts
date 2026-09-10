@@ -6,9 +6,9 @@ import { CAPABILITY_RECORD_KEYS } from "./keys.js";
 
 /**
  * Reads an operator's on-chain capability record fields and validates the result
- * against the shared Zod schema. `operational_key` isn't itself a resolver record —
+ * against the shared Zod schema. `operational_key` isn't itself a resolver record -
  * it's whoever the resolver's EAC roles say may write `endpoint`/`tiers_supported`/
- * `attestation_build_hash` for this node — so the caller supplies it (from wherever
+ * `attestation_build_hash` for this node - so the caller supplies it (from wherever
  * it tracks which key it delegated), and this function only reads what the resolver
  * actually stores.
  */

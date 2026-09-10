@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { listOperators } from "../relays.js";
 
-/** `GET /relays` — ENSv2-registered relays + status + declared tiers. */
+/** `GET /relays` - ENSv2-registered relays + status + declared tiers. */
 export function registerRelaysRoute(app: FastifyInstance) {
   app.get("/relays", async () => {
     const operators = await listOperators();
@@ -15,9 +15,9 @@ export function registerRelaysRoute(app: FastifyInstance) {
     };
   });
 
-  /** `GET /relays/:id/attestation` — current attestation report + operator status.
+  /** `GET /relays/:id/attestation` - current attestation report + operator status.
    *  Honest limitation: there is no real Chainlink CRE handler binary to verify
-   *  against yet (see docs/chainlink-cre-findings.md) — this reports the on-chain
+   *  against yet (see docs/chainlink-cre-findings.md) - this reports the on-chain
    *  attestation_build_hash and status as-is, not an independent verification. */
   app.get<{ Params: { id: string } }>("/relays/:id/attestation", async (request, reply) => {
     const operators = await listOperators();
@@ -29,7 +29,7 @@ export function registerRelaysRoute(app: FastifyInstance) {
       status: op.status,
       attestationBuildHash: op.attestation_build_hash,
       simulated: true,
-      reason: "STUB attestation hash — no real CRE handler binary yet. See docs/chainlink-cre-findings.md.",
+      reason: "STUB attestation hash - no real CRE handler binary yet. See docs/chainlink-cre-findings.md.",
     });
   });
 }

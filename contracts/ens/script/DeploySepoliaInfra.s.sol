@@ -17,18 +17,18 @@ import {IDvodResolver} from "../src/interfaces/IDvodResolver.sol";
 ///
 ///         DOES NOT REGISTER THE PARENT NAME ITSELF. Registering a real .eth 2LD
 ///         (e.g. "dvod-test.eth") goes through ETHRegistrar's stablecoin-payment flow,
-///         which the ENS Sepolia app UI already does correctly — do that by hand with
+///         which the ENS Sepolia app UI already does correctly - do that by hand with
 ///         the same wallet as DEPLOYER_ADDRESS below, then call
 ///         ETHRegistry.setSubregistry(tokenId, <this script's Subregistry output>) and
 ///         ETHRegistry.setResolver(tokenId, <this script's ResolverProxy output>) as
 ///         that name's owner. See docs/ensv2-sepolia-deploy.md.
 ///
 /// Addresses below are verified from ensdomains/contracts-v2's own *current* Sepolia
-/// deployment artifacts (contracts/deployments/sepolia/*.json — not the dated
+/// deployment artifacts (contracts/deployments/sepolia/*.json - not the dated
 /// `sepolia-official-v1-20260525-r2` snapshot, which turned out to be stale: a
 /// `git log` on PermissionedResolver.sol showed a `main`-branch change on 2026-07-03,
 /// after that snapshot's date, and a Sepolia-fork dry run against the dated addresses
-/// reverted with empty data on `initialize` — exactly the "live docs/deployment win"
+/// reverted with empty data on `initialize` - exactly the "live docs/deployment win"
 /// case the brief warns about. Re-verified against the undated directory, fetched
 /// 2026-09-09.
 contract DeploySepoliaInfra is Script {
@@ -54,7 +54,7 @@ contract DeploySepoliaInfra is Script {
         // Shared resolver proxy: deployer gets ROOT admin roles over SET_TEXT/SET_DATA/
         // SET_ADDR, so it can later delegate specific per-node record roles to each
         // operator's operational key and to WatchdogRevoker (see
-        // packages/identity/ens buildRegisterOperatorCalls — that's where the
+        // packages/identity/ens buildRegisterOperatorCalls - that's where the
         // per-operator authorizeTextRoles/authorizeDataRoles calls happen, not here).
         uint256 resolverAdminRoles = PermissionedResolverLib.ROLE_SET_TEXT
             | PermissionedResolverLib.ROLE_SET_TEXT_ADMIN | PermissionedResolverLib.ROLE_SET_DATA

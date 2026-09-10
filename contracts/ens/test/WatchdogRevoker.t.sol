@@ -23,7 +23,7 @@ contract WatchdogRevokerTest is Test {
         resolver.seedData(node, CapabilityRecordKeys.ATTESTATION_BUILD_HASH, abi.encode(publishedHash));
         resolver.seedData(node, CapabilityRecordKeys.STATUS, CapabilityRecordKeys.STATUS_ACTIVE);
 
-        // Only the watchdog contract holds the (mocked) role to write this node's status —
+        // Only the watchdog contract holds the (mocked) role to write this node's status -
         // mirrors authorizeDataRoles(toName, "dvod.status", address(watchdog), true) on the
         // real resolver.
         resolver.setWriter(node, CapabilityRecordKeys.STATUS, address(watchdog));
@@ -52,7 +52,7 @@ contract WatchdogRevokerTest is Test {
         assertEq(resolver.data(node, CapabilityRecordKeys.STATUS), CapabilityRecordKeys.STATUS_REVOKED);
 
         // Second submission of the same (still-true) fact must not revert and must not
-        // re-emit — it's a no-op, not an error.
+        // re-emit - it's a no-op, not an error.
         vm.recordLogs();
         watchdog.submitAttestationCheck(node, tampered);
         assertEq(vm.getRecordedLogs().length, 0);
@@ -60,14 +60,14 @@ contract WatchdogRevokerTest is Test {
     }
 
     function test_onlyWatchdogAddress_canActuallyRevoke_evenThoughSubmittingIsPermissionless() public {
-        // Submitting a check is permissionless — any address can call it (this test's
+        // Submitting a check is permissionless - any address can call it (this test's
         // sender is neither the admin nor a preconfigured writer).
         vm.prank(address(0xBEEF));
         watchdog.submitAttestationCheck(node, "a-different-binary-entirely");
         assertEq(resolver.data(node, CapabilityRecordKeys.STATUS), CapabilityRecordKeys.STATUS_REVOKED);
 
         // But an arbitrary address cannot call the resolver directly to revoke a
-        // *different* operator — only the watchdog contract's own address is authorized.
+        // *different* operator - only the watchdog contract's own address is authorized.
         bytes32 otherNode = keccak256("carol.dvod.eth");
         resolver.seedData(otherNode, CapabilityRecordKeys.STATUS, CapabilityRecordKeys.STATUS_ACTIVE);
         resolver.setWriter(otherNode, CapabilityRecordKeys.STATUS, address(watchdog));

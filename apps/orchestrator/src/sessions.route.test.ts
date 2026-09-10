@@ -25,7 +25,7 @@ vi.mock("./arc-client.js", () => ({
 }));
 
 // This suite is about the HTTP/quote/payment-verification contract, not the state
-// machine's own persistence — that's covered by session-state.test.ts against a
+// machine's own persistence - that's covered by session-state.test.ts against a
 // real Postgres test database. Stub both out here to keep this suite fast/isolated.
 vi.mock("./session-state.js", () => ({
   recordTransition: vi.fn(async (sessionId: string, toState: string, opts: Record<string, unknown>) => ({

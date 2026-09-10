@@ -21,7 +21,7 @@ export const SessionStateSchema = z.enum([
 ]);
 export type SessionState = z.infer<typeof SessionStateSchema>;
 
-/** Valid transitions out of each state — enforced by the orchestrator, not just documentation. */
+/** Valid transitions out of each state - enforced by the orchestrator, not just documentation. */
 export const SESSION_STATE_TRANSITIONS: Record<SessionState, SessionState[]> = {
   BROWSING: ["QUOTED"],
   QUOTED: ["PAID"],

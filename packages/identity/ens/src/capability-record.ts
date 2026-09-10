@@ -8,7 +8,7 @@ import { CAPABILITY_RECORD_KEYS, STATUS_ACTIVE } from "./keys.js";
 export interface RegisterOperatorParams {
   /** Full operator subname, e.g. "bob.dvod.eth". */
   name: string;
-  /** ERC1155 owner of the registry entry — the operator's account. */
+  /** ERC1155 owner of the registry entry - the operator's account. */
   ownerAddress: `0x${string}`;
   /** Distinguishes update-endpoint/capabilities authority from earnings custody. */
   operationalKeyAddress: `0x${string}`;
@@ -16,7 +16,7 @@ export interface RegisterOperatorParams {
   endpoint: string;
   tiersSupported: CapabilityRecord["tiers_supported"];
   attestationBuildHash: `0x${string}`;
-  /** WatchdogRevoker contract address — the only account ever granted the role to
+  /** WatchdogRevoker contract address - the only account ever granted the role to
    *  write this operator's `dvod.status` record. */
   watchdogAddress: `0x${string}`;
   expiry: bigint;
@@ -34,13 +34,13 @@ export interface ContractCall {
  * operator: create the subname (owner = operator's account, resolver = DVoD's shared
  * PermissionedResolver deployment), write its capability record, grant the
  * operational key exactly the record-level roles it needs (never `payout_address` or
- * `status`), and grant the watchdog contract — not a human — the role to revoke it.
+ * `status`), and grant the watchdog contract - not a human - the role to revoke it.
  *
  * Caller must hold `SET_TEXT_ADMIN`/`SET_DATA_ADMIN` (typically via a root grant made
  * once when the shared resolver was deployed) to execute the `authorize*Roles` calls;
  * see contracts/ens/src/WatchdogRevoker.sol and brief §7.2/§7.3 for the invariant this
  * enforces. Each returned call is meant to run in this order, but is not itself a
- * multicall — callers on testnet may batch them via the resolver's own `multicall`.
+ * multicall - callers on testnet may batch them via the resolver's own `multicall`.
  */
 export function buildRegisterOperatorCalls(
   registryAddress: `0x${string}`,
@@ -126,7 +126,7 @@ export function buildRegisterOperatorCalls(
       ],
     },
     // Deliberately no authorizeDataRoles for payout_address or status to the
-    // operational key — see the invariant this function's docstring points at.
+    // operational key - see the invariant this function's docstring points at.
     {
       address: resolverAddress,
       abi: permissionedResolverAbi,

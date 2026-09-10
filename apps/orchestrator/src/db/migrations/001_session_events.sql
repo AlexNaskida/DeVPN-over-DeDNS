@@ -1,7 +1,7 @@
 -- Every session state transition is an event row, per brief §6 Phase 4: "Every state
--- transition is an event row — the UI is a projection of that log, and so is the
+-- transition is an event row - the UI is a projection of that log, and so is the
 -- audit trail." session_id is the on-chain SessionEscrow session id (uint256),
--- recorded from PAID onward — pre-payment BROWSING/QUOTED states are client-local
+-- recorded from PAID onward - pre-payment BROWSING/QUOTED states are client-local
 -- and not persisted, since there's no durable session identity before payment.
 CREATE TABLE IF NOT EXISTS session_events (
   id BIGSERIAL PRIMARY KEY,

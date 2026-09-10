@@ -10,9 +10,9 @@ import {
 import { broadcast } from "../ws-hub.js";
 
 /**
- * `POST /sessions/:id/force-relay-failure` — the demo/testing-only control from
+ * `POST /sessions/:id/force-relay-failure` - the demo/testing-only control from
  * brief §9.3: kills the current relay and drives the automatic failover to a
- * healthy one, live. Clearly not a normal end-user action — a real deployment
+ * healthy one, live. Clearly not a normal end-user action - a real deployment
  * would trigger this from the watchdog contract's revoke event or a real
  * connectivity check, not an HTTP call anyone can make.
  */

@@ -7,7 +7,7 @@ export function registerClient(socket: WebSocket): void {
   socket.on("close", () => clients.delete(socket));
 }
 
-/** Broadcasts one event to every connected `WS /stream` client — the live feed
+/** Broadcasts one event to every connected `WS /stream` client - the live feed
  *  behind brief §9.3's dashboard and §9.5's revocation feed. */
 export function broadcast(event: Record<string, unknown>): void {
   const payload = JSON.stringify(event);

@@ -12,7 +12,7 @@ import {
 
 /**
  * Real integration test against an actual Postgres database (DATABASE_URL, default
- * postgres://localhost/dvod_test) — not mocked. Run `pnpm migrate` against that
+ * postgres://localhost/dvod_test) - not mocked. Run `pnpm migrate` against that
  * database first. Each test uses its own random session id so they don't collide.
  */
 describe("session-state (real Postgres)", () => {

@@ -12,10 +12,10 @@ export type RelayStatus = z.infer<typeof RelayStatusSchema>;
  *
  * Invariant (test explicitly): the operational key may update endpoint,
  * tiers_supported, and attestation_build_hash, but can never touch
- * payout_address — that is set once at registration and changed only
+ * payout_address - that is set once at registration and changed only
  * through a separate, more restricted permission path. status is only
  * ever changed by the watchdog contract (or, in the manual fallback, the
- * admin key) — never by the operational key.
+ * admin key) - never by the operational key.
  */
 export const CapabilityRecordSchema = z.object({
   operator: z.string().min(1), // e.g. "bob.dvod.eth"

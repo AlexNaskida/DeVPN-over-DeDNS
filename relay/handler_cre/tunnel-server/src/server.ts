@@ -14,7 +14,7 @@ export interface TunnelEvent {
 export interface CreateTunnelServerOptions {
   secret: string;
   relayName: string;
-  /** Called on every tunnel lifecycle event — the seam Phase 4's "what's visible to
+  /** Called on every tunnel lifecycle event - the seam Phase 4's "what's visible to
    *  whom" panel will subscribe to, using real captured metadata per brief §9.3. */
   onEvent?: (event: TunnelEvent) => void;
 }
@@ -22,7 +22,7 @@ export interface CreateTunnelServerOptions {
 /**
  * A real HTTP CONNECT proxy: tunnel termination (accepts the client's CONNECT),
  * DNS resolution + outbound connection (`net.connect` resolves and dials the
- * target), and bidirectional proxying (`pipe` both ways) — all genuinely
+ * target), and bidirectional proxying (`pipe` both ways) - all genuinely
  * functioning. What's SIMULATED is *where* it runs: a plain process, not a
  * Chainlink CRE confidential handler. See config.ts.
  */
@@ -71,13 +71,13 @@ export function createTunnelServer(options: CreateTunnelServerOptions): http.Ser
       return;
     }
 
-    // Real DNS resolution + outbound connection — net.connect resolves targetHost.
+    // Real DNS resolution + outbound connection - net.connect resolves targetHost.
     const targetSocket = net.connect(targetPort, targetHost, () => {
       clientSocket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
       targetSocket.write(head);
       onEvent?.({ event: "open", targetHost, targetPort });
 
-      // Bidirectional proxy — the actual tunnel.
+      // Bidirectional proxy - the actual tunnel.
       targetSocket.pipe(clientSocket);
       clientSocket.pipe(targetSocket);
     });
