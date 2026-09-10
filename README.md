@@ -8,6 +8,11 @@
 > revocable by a permissionless watchdog contract. Payment settles in USDC on Arc via
 > x402, as a batched per-session purchase.
 
+The paragraph above is the target design. **The payment/authorization/revocation
+control plane is real and live today; the traffic-tunneling data plane is not yet
+connected end to end** - see `docs/SECURITY.md` for the precise, current line between
+the two.
+
 ## Architecture
 
 ![DVoD architecture](docs/architecture.jpg)
@@ -19,10 +24,35 @@ it expires or the watchdog contract revokes the relay.
 
 ## Status
 
-Phases 0-4 are complete - see the [build phases](#build-phases) below. This section
-will grow into a proper quickstart,
-threat model summary, and "what's real vs. simulated" breakdown as later phases land
-(tracked in `docs/SECURITY.md` once written).
+Phases 0-5 are complete and the full stack is deployed live (not just runnable
+locally) - see [Live deployment](#live-deployment) and the [build phases](#build-phases)
+below. Phase 5's docs are real, not placeholders: `docs/SECURITY.md` (honest scope/
+threat model), `docs/PRICING.md`, `docs/demo-script.md`, and `docs/load-test.md` (a
+real load test that found and fixed a genuine bug - an uncached RPC call that
+exhausted a public RPC's rate limit under trivial concurrency).
+
+## Live deployment
+
+The whole stack runs on real infrastructure, not just `localhost`:
+
+- **Web app** (`apps/web`) - deployed to Cloudflare Workers via the OpenNext adapter,
+  with CI-gated auto-deploy on every push to `main` (see
+  `.github/workflows/deploy-web.yml`).
+- **Orchestrator** (`apps/orchestrator`) - deployed as a Render web service (always-on,
+  doesn't depend on any single machine staying awake).
+- **Database** - a real Neon Postgres instance, not a local dev database.
+- **Contracts** - live on Sepolia (ENSv2 registry/watchdog) and Arc testnet
+  (`SessionEscrow`), as documented per-phase below.
+
+Verified end to end against this exact live stack (not local mocks): a real
+`purchaseSession` transaction, through the deployed orchestrator, into Neon,
+rendered live on the deployed web app, including the forced-failover demo running
+over the deployed site's own WebSocket connection with no page reload.
+
+**Honest limitation:** this proves the control plane (payment → authorization → live
+state → revocation/failover) is real, end to end, live. It does not mean user traffic
+is actually tunneled anywhere yet - see `docs/SECURITY.md`'s scope note for exactly
+what's real vs. not in the data plane.
 
 ## Build phases
 
@@ -32,8 +62,27 @@ threat model summary, and "what's real vs. simulated" breakdown as later phases 
 | 1 | ENSv2 registry + watchdog contract | ✅ done (`v0.2-phase1`) |
 | 2 | Arc + x402 session purchase | ✅ done (`v0.3-phase2`) |
 | 3 | Chainlink CRE relay handler | ✅ done - real tunnel + real CRE attestation job |
-| 4 | Orchestrator + web app | ✅ done (`v0.5-phase4`) |
-| 5 | Hardening, docs, demo | not started |
+| 4 | Orchestrator + web app | ✅ done (`v0.5-phase4`), deployed live |
+| 5 | Hardening, docs, demo | ✅ done (`v0.6-phase5`) |
+
+**Phase 5 - what's real:**
+
+- `docs/SECURITY.md` - a consolidated, honest threat model: what's actually
+  protected (payment can't be faked, revocation is permissionless, payout keys are
+  never delegated to operational keys) versus the real gaps (no deployed tunnel, no
+  confidential compute, stub attestation content, no partial refunds).
+- `docs/PRICING.md` - the real rate card (`packages/session-spec/src/tier.ts`,
+  mirrored exactly in the orchestrator and the contract) and where payment actually
+  goes.
+- `docs/demo-script.md` - a ~5 minute walkthrough script, written to end on the
+  honest limitation rather than hide it.
+- `docs/load-test.md` - a real `autocannon` run against `GET /tiers` found a genuine
+  bug: every request re-read every operator's ENSv2 record from Sepolia live, with no
+  caching, which exhausted the public RPC's rate limit at just 20 concurrent
+  connections (`p50` latency 4.8s, real `500`s). Fixed with a 10s cache
+  (`apps/orchestrator/src/relays.ts`) and re-measured, not assumed: `p50` latency
+  dropped to 0ms and throughput went from ~4.6 req/s (with errors) to ~14,600 req/s
+  clean.
 
 **Phase 4 - what's real, verified live, not just unit-tested:**
 
@@ -51,14 +100,21 @@ threat model summary, and "what's real vs. simulated" breakdown as later phases 
 - Added a third registered operator, `dave.dvod-test.eth`, specifically so that
   failover demo has a real second active relay (`bob` is still revoked from Phase
   1's demo). See [`docs/orchestrator-state-machine.md`](docs/orchestrator-state-machine.md).
-- `apps/web` (Next.js 15) - landing page, tier selection/purchase (real browser
-  wallet flow: connects via EIP-1193, sends the actual `purchaseSession` tx, confirms
-  with the orchestrator), a live session dashboard (`WS /stream`-driven event log +
-  "what's visible to whom" panel + the forced-failover demo button), an operator
-  console (live ENSv2 registry state + attestation lookup), and a trust page.
-  Verified end to end in a real browser against a real Arc-testnet purchase: the
-  dashboard received the full live failover sequence over its own WebSocket
-  connection with no page reload.
+- `apps/web` (Next.js 15) - landing page (interactive 3D hero, `@react-three/fiber`),
+  tier selection/purchase (real EIP-6963 multi-wallet flow - a proper picker, not a
+  blind `window.ethereum` guess - sends the actual `purchaseSession` tx, confirms with
+  the orchestrator), a live session dashboard (`WS /stream`-driven event log, "what's
+  visible to whom" panel, the forced-failover demo button, and a real user-facing "end
+  session early" control with a confirmation dialog), an account page, and an operator
+  console (live ENSv2 registry state + attestation lookup). Verified end to end in a
+  real browser against real purchases: the dashboard received full live failover
+  sequences over its own WebSocket connection with no page reload.
+- Real bugs found and fixed by actually deploying rather than assuming it would work:
+  a `pg`/Turbo strict-env-mode interaction that broke CI's database tests, a wallet
+  `this`-binding bug that crashed on real MetaMask (destructuring `provider.on` off
+  its object), and `db/pool.ts` silently dropping `sslmode` from `DATABASE_URL` (broke
+  Neon, which requires SSL). Each is a one-line fix once found, but none of them would
+  have surfaced without exercising the real path.
 
 **Phase 3 - the honesty-critical phase, resolved with a real finding:**
 
