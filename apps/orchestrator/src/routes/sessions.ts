@@ -90,7 +90,12 @@ export function registerSessionsRoute(app: FastifyInstance) {
           ["TUNNEL_OPEN", `relay ${relay.operator}`],
           ["ACTIVE", undefined],
         ] as const) {
-          const event = await recordTransition(sid, toState, { relay: relay.operator, tier, detail });
+          const event = await recordTransition(sid, toState, {
+            relay: relay.operator,
+            tier,
+            detail,
+            expiresAt,
+          });
           broadcast({ type: "session_transition", ...event });
         }
 

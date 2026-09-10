@@ -1,38 +1,11 @@
 import { createWalletClient, custom } from "viem";
 import type { Tier } from "@dvod/session-spec";
+import type { EIP1193Provider } from "./eip6963";
 import { arcTestnet, purchaseSessionAbi, TIER_INDEX } from "./chain";
-
-declare global {
-  interface Window {
-    ethereum?: {
-      request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-    };
-  }
-}
-
-export class NoWalletError extends Error {
-  constructor() {
-    super("No browser wallet found. Install MetaMask or another EIP-1193 wallet.");
-  }
-}
-
-function getProvider() {
-  if (typeof window === "undefined" || !window.ethereum) throw new NoWalletError();
-  return window.ethereum;
-}
-
-export async function connectWallet(): Promise<`0x${string}`> {
-  const provider = getProvider();
-  const accounts = (await provider.request({ method: "eth_requestAccounts" })) as string[];
-  const account = accounts[0];
-  if (!account) throw new Error("wallet returned no accounts");
-  return account as `0x${string}`;
-}
 
 /** Adds/switches the wallet to Arc testnet if it isn't already there - most
  * wallets don't have chain 5042002 pre-configured. */
-async function ensureArcTestnet(): Promise<void> {
-  const provider = getProvider();
+async function ensureArcTestnet(provider: EIP1193Provider): Promise<void> {
   const chainIdHex = `0x${arcTestnet.id.toString(16)}`;
   try {
     await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: chainIdHex }] });
@@ -54,18 +27,21 @@ async function ensureArcTestnet(): Promise<void> {
 /**
  * Sends the real `purchaseSession(tier, hours)` transaction with `value` set to
  * the exact quoted price - the actual on-chain payment, signed by the connected
- * wallet. Returns the tx hash once broadcast (not necessarily mined yet); callers
- * should wait for a receipt before calling the orchestrator's confirm step.
+ * wallet. `provider` is the specific EIP-6963 provider the user picked, not a
+ * blind `window.ethereum` guess - that's what previously caused "connect wallet"
+ * to open whichever extension last overwrote `window.ethereum` (often Phantom)
+ * instead of the one the user actually meant. Returns the tx hash once
+ * broadcast (not necessarily mined yet).
  */
 export async function sendPurchaseTx(
+  provider: EIP1193Provider,
   account: `0x${string}`,
   contract: `0x${string}`,
   tier: Tier,
   hours: number,
   valueWei: bigint,
 ): Promise<`0x${string}`> {
-  await ensureArcTestnet();
-  const provider = getProvider();
+  await ensureArcTestnet(provider);
   const client = createWalletClient({ chain: arcTestnet, transport: custom(provider) });
 
   return client.writeContract({
