@@ -50,3 +50,64 @@ button {
   background: var(--primary);
   color: var(--primary-foreground);
 }
+
+/* Horizontal hours slider (HoursSlider.tsx) - a native <input type="range">
+   restyled, since the thumb/track are only reachable via these pseudo-elements. */
+.dvod-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 999px;
+  outline: none;
+  cursor: pointer;
+}
+
+.dvod-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 3px solid var(--background);
+  box-shadow: 0 0 0 1px var(--primary);
+  cursor: grab;
+}
+
+.dvod-slider::-webkit-slider-thumb:active {
+  cursor: grabbing;
+}
+
+.dvod-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 3px solid var(--background);
+  box-shadow: 0 0 0 1px var(--primary);
+  cursor: grab;
+}
+
+.dvod-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+/* Loading skeletons - shown in place of cards while data is still in flight,
+   instead of leaving the page blank. */
+@keyframes skeletonPulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.skeleton {
+  animation: skeletonPulse 1.4s ease-in-out infinite;
+  background: var(--muted);
+  border-radius: 4px;
+}
