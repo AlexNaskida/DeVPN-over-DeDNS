@@ -6,7 +6,7 @@ pragma solidity ^0.8.13;
 ///         `dvod.attestation_build_hash` are writable by the operational key.
 ///         `dvod.payout_address` is set once at registration and never re-delegated.
 ///         `dvod.status` is writable only by WatchdogRevoker (or, in the manual
-///         fallback, the admin) — never by the operational key.
+///         fallback, the admin) - never by the operational key.
 library CapabilityRecordKeys {
     string internal constant ENDPOINT = "dvod.endpoint";
     string internal constant TIERS_SUPPORTED = "dvod.tiers_supported";

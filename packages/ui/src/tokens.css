@@ -1,8 +1,8 @@
 /**
- * DVoD design tokens — §8.1 of the build brief.
+ * DVoD design tokens - §8.1 of the build brief.
  * Register: professional, trustworthy, privacy-tool-grade. No gradients,
  * no glows, no glassmorphism. --accent is reserved ONLY for live session
- * countdown, tier-selection highlight, and failover/revocation events —
+ * countdown, tier-selection highlight, and failover/revocation events -
  * never generic buttons, links, or navigation.
  */
 :root {
@@ -10,13 +10,13 @@
   --foreground: #eaedf0; /* primary text */
   --card: #12171c; /* panels, cards */
   --card-foreground: #eaedf0;
-  --primary: #2e7d6b; /* deep teal — trust, privacy, "the shield" color */
+  --primary: #2e7d6b; /* deep teal - trust, privacy, "the shield" color */
   --primary-foreground: #ffffff;
-  --secondary: #3b4a52; /* slate blue-gray — supporting actions */
+  --secondary: #3b4a52; /* slate blue-gray - supporting actions */
   --secondary-foreground: #eaedf0;
   --muted: #1b2126; /* subdued surfaces */
   --muted-foreground: #8a97a0; /* secondary text, timestamps */
-  --accent: #e8a33d; /* warm amber — reserved, see rule above */
+  --accent: #e8a33d; /* warm amber - reserved, see rule above */
   --accent-foreground: #14181c;
   --destructive: #c0473f; /* revoked / failed states, used sparingly */
   --destructive-foreground: #ffffff;

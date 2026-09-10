@@ -2,7 +2,7 @@
  * Minimal ABI fragments for the ENSv2 contracts-v2 functions DVoD actually calls.
  * Signatures copied verbatim from `ensdomains/contracts-v2` (fetched 2026-09-09,
  * `main` branch): `contracts/src/registry/PermissionedRegistry.sol` and
- * `contracts/src/resolver/PermissionedResolver.sol`. Not the full ABI — just enough
+ * `contracts/src/resolver/PermissionedResolver.sol`. Not the full ABI - just enough
  * to register an operator subname and read/write its capability record.
  */
 export const permissionedRegistryAbi = [

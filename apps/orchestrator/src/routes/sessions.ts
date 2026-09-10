@@ -10,16 +10,18 @@ import {
 import { priceWei, priceDisplay } from "../pricing.js";
 import { eligibleOperators } from "../relays.js";
 import { verifySessionPurchase, PaymentVerificationError } from "../arc-client.js";
+import { recordTransition } from "../session-state.js";
+import { broadcast } from "../ws-hub.js";
 
-/** Replay protection — a real deployment would persist this (Phase 4's Postgres). */
+/** Replay protection - a real deployment would persist this (Phase 4's Postgres). */
 const usedTxHashes = new Set<string>();
 
 /**
- * `POST /sessions/:tier/:hours` — x402-shaped, but see docs/arc-testnet-deploy.md's
+ * `POST /sessions/:tier/:hours` - x402-shaped, but see docs/arc-testnet-deploy.md's
  * architecture note: x402's real settlement moves an asset to `payTo`, with no
  * generic-calldata path for a specific contract call. So the 402 quote below points
  * at `SessionEscrow.purchaseSession` directly (via `extra`), the client signs and
- * sends that transaction itself, and retries with `x-session-tx: <hash>` — which
+ * sends that transaction itself, and retries with `x-session-tx: <hash>` - which
  * this route verifies against the real chain (brief §7.1's flow, adapted to what
  * x402 v2 actually supports).
  */
@@ -78,6 +80,20 @@ export function registerSessionsRoute(app: FastifyInstance) {
 
         const relay = eligible[0]!;
         const expiresAt = Math.floor(Date.now() / 1000) + hours * 3600;
+        const sid = sessionId.toString();
+
+        // Drive the real state machine (brief §4/§6 Phase 4) - each transition is
+        // an event row, broadcast live to WS /stream as it happens.
+        for (const [toState, detail] of [
+          ["PAID", `paid via tx ${txHash}`],
+          ["TOKEN_ISSUED", undefined],
+          ["TUNNEL_OPEN", `relay ${relay.operator}`],
+          ["ACTIVE", undefined],
+        ] as const) {
+          const event = await recordTransition(sid, toState, { relay: relay.operator, tier, detail });
+          broadcast({ type: "session_transition", ...event });
+        }
+
         const token = issueSessionToken(
           {
             sessionId: Number(sessionId),

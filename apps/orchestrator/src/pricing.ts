@@ -1,7 +1,7 @@
 import type { Tier } from "@dvod/session-spec";
 
 /**
- * Integer cents, not the float `sessionPriceUsdc` from session-spec — this is the
+ * Integer cents, not the float `sessionPriceUsdc` from session-spec - this is the
  * one used for on-chain wei amounts, where float rounding would be a real bug.
  * Values match packages/session-spec/src/tier.ts and contracts/arc/src/
  * SessionEscrow.sol's rates exactly (all three sources must agree).

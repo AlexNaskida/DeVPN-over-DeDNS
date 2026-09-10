@@ -9,7 +9,7 @@ export const TIER_RESERVED_MBPS: Record<Tier, number> = {
   turbo: 100,
 };
 
-/** Illustrative flat rate — not an economically modeled rate card, tune before demo. */
+/** Illustrative flat rate - not an economically modeled rate card, tune before demo. */
 export const TIER_BASE_RATE_USDC_PER_HOUR: Record<Tier, number> = {
   lite: 0.1,
   standard: 0.35,

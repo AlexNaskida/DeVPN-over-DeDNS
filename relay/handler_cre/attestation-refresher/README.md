@@ -1,6 +1,6 @@
-# Keeper Bot — CRE Starter Template (TypeScript)
+# Keeper Bot - CRE Starter Template (TypeScript)
 
-Cron-based smart contract maintenance — read state, check condition, execute if needed.
+Cron-based smart contract maintenance - read state, check condition, execute if needed.
 
 **⚠️ DISCLAIMER**
 
@@ -61,13 +61,13 @@ The TypeScript workflow runs off-chain inside CRE DON:
 
 A simple Solidity contract extending `ReceiverTemplate`:
 
-- `needsUpkeep()` — view function that checks if `interval` seconds have elapsed
-- `_processReport(bytes)` — called by CRE Forwarder via ReceiverTemplate, decodes and stores the new counter
-- `counter`, `lastExecuted`, `interval` — public state variables
+- `needsUpkeep()` - view function that checks if `interval` seconds have elapsed
+- `_processReport(bytes)` - called by CRE Forwarder via ReceiverTemplate, decodes and stores the new counter
+- `counter`, `lastExecuted`, `interval` - public state variables
 
 ## Getting Started
 
-A demo `KeeperConsumer` contract is pre-deployed on Sepolia — this template works out of the box.
+A demo `KeeperConsumer` contract is pre-deployed on Sepolia - this template works out of the box.
 
 ### Prerequisites
 
@@ -116,7 +116,7 @@ Then update the `contractAddress` in `my-workflow/config.staging.json` with your
 
 ### Coming from Gelato?
 
-This template replaces Gelato's `Web3Function.onRun()` with a CRE cron trigger. Gelato shut down Web3 Functions in March 2026 — this is the direct migration path.
+This template replaces Gelato's `Web3Function.onRun()` with a CRE cron trigger. Gelato shut down Web3 Functions in March 2026 - this is the direct migration path.
 
 | Gelato | CRE |
 |--------|-----|
@@ -127,7 +127,7 @@ This template replaces Gelato's `Web3Function.onRun()` with a CRE cron trigger. 
 
 ### Coming from Chainlink Automation?
 
-This template replaces the `checkUpkeep() + performUpkeep()` pattern with off-chain logic + `onReport()`. No more gas overhead for `checkUpkeep` — the condition check runs off-chain in CRE DON.
+This template replaces the `checkUpkeep() + performUpkeep()` pattern with off-chain logic + `onReport()`. No more gas overhead for `checkUpkeep` - the condition check runs off-chain in CRE DON.
 
 | Chainlink Automation | CRE |
 |---------------------|-----|
@@ -137,7 +137,7 @@ This template replaces the `checkUpkeep() + performUpkeep()` pattern with off-ch
 
 ## Security
 
-- The `KeeperConsumer.sol` contract is a **demo** — audit and customize before production use
+- The `KeeperConsumer.sol` contract is a **demo** - audit and customize before production use
 - The `ReceiverTemplate` base contract validates that only CRE Forwarder can call `onReport()`
 - Never commit `.env` files or secrets
 

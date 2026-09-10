@@ -5,7 +5,7 @@ import {Script, console2} from "forge-std/Script.sol";
 import {SessionEscrow} from "../src/SessionEscrow.sol";
 
 /// @notice Deploys SessionEscrow to Arc testnet (chain id 5042002, RPC
-///         https://rpc.testnet.arc.io — verified from docs.arc.io/arc/references/
+///         https://rpc.testnet.arc.io - verified from docs.arc.io/arc/references/
 ///         connect-to-arc, fetched 2026-09-10). USDC is Arc's native gas/value
 ///         token, so no ERC-20 setup is needed here.
 contract DeploySessionEscrow is Script {

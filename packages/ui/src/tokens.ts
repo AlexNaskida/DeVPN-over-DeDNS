@@ -1,7 +1,7 @@
 /**
  * TS-side mirror of tokens.css, for places that need the raw values
  * (charts, canvas, non-CSS consumers) rather than a CSS variable.
- * Keep in sync with tokens.css by hand — there is no build step yet.
+ * Keep in sync with tokens.css by hand - there is no build step yet.
  */
 export const tokens = {
   background: "#0A0E12",
@@ -24,7 +24,7 @@ export const tokens = {
 } as const;
 
 /**
- * Accent is reserved for exactly these three UI moments — see §8.1's
+ * Accent is reserved for exactly these three UI moments - see §8.1's
  * "accent rule." Anything else must not use it.
  */
 export const ACCENT_RESERVED_FOR = [

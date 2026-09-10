@@ -1,5 +1,5 @@
 /**
- * DNS wire-format name encoding, matching `NameCoder.encode` in ENSv2's contracts —
+ * DNS wire-format name encoding, matching `NameCoder.encode` in ENSv2's contracts -
  * a length-prefixed label sequence terminated by a zero byte (the classic DNS packet
  * format ENSIP-based resolvers use for `bytes calldata name` parameters, e.g.
  * `PermissionedResolver.authorizeTextRoles(bytes toName, ...)`).

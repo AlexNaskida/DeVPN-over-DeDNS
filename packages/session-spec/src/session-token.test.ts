@@ -38,7 +38,7 @@ describe("session token", () => {
     expect(verifySessionToken("not-a-real-token", secret)).toBeNull();
   });
 
-  it("rejects a token verified against the wrong secret — this is exactly what lets the relay tunnel handler check tokens it never issued", () => {
+  it("rejects a token verified against the wrong secret - this is exactly what lets the relay tunnel handler check tokens it never issued", () => {
     const token = issueSessionToken(payload, secret);
     expect(verifySessionToken(token, otherSecret)).toBeNull();
   });

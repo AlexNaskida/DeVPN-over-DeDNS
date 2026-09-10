@@ -4,10 +4,10 @@
  * the admin wallet (the same wallet that deployed the subregistry/resolver/
  * watchdog in contracts/ens/script/DeploySepoliaInfra.s.sol).
  *
- * STUB: attestation_build_hash below is a placeholder — Phase 3 (the real
+ * STUB: attestation_build_hash below is a placeholder - Phase 3 (the real
  * Chainlink CRE handler) doesn't exist yet, so there's no real audited build to
  * hash. Do not treat a "valid" attestation check against this as meaning
- * anything beyond "the demo's watchdog logic works" — see brief §11.
+ * anything beyond "the demo's watchdog logic works" - see brief §11.
  *
  * Required env vars:
  *   RPC_URL, ADMIN_PRIVATE_KEY, REGISTRY_ADDRESS, RESOLVER_ADDRESS, WATCHDOG_ADDRESS
@@ -70,7 +70,7 @@ async function main() {
     expiry: BigInt(Math.floor(Date.now() / 1000) + 10 * 365 * 24 * 60 * 60),
   });
 
-  console.log(`Registering ${operatorName} — ${calls.length} calls`);
+  console.log(`Registering ${operatorName} - ${calls.length} calls`);
   for (const call of calls) {
     const data = encodeCall(call);
     console.log(`  -> ${call.functionName}(${call.args.join(", ")})`);

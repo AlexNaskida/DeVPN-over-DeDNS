@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 /// @notice Holds session-purchase funds on Arc. USDC is Arc's native gas/value token
-///         (18 decimals) — see docs.arc.io/arc/references/connect-to-arc — so payment
+///         (18 decimals) - see docs.arc.io/arc/references/connect-to-arc - so payment
 ///         here is a plain native-value transaction, not an ERC-20 approve/transferFrom.
 ///
 ///         Per brief §2.1/§2.4: a batched per-session purchase, never per-packet or
@@ -10,7 +10,7 @@ pragma solidity ^0.8.13;
 ///         session; which relay actually serves it is an off-chain orchestrator
 ///         decision (ENSv2 discovery), not tracked here. `payoutOperator` disburses
 ///         accumulated revenue to an operator's `payout_address` (see
-///         packages/identity/ens capability record) — a separate admin action, not
+///         packages/identity/ens capability record) - a separate admin action, not
 ///         tied 1:1 to any single session.
 contract SessionEscrow {
     enum Tier {
@@ -29,7 +29,7 @@ contract SessionEscrow {
     }
 
     /// @dev Illustrative flat rate, matching packages/session-spec/src/tier.ts
-    ///      exactly — not an economically modeled rate card, tune before demo.
+    ///      exactly - not an economically modeled rate card, tune before demo.
     uint256 internal constant LITE_RATE_PER_HOUR = 0.1 ether; // $0.10/hr, 18 decimals
     uint256 internal constant STANDARD_RATE_PER_HOUR = 0.35 ether; // $0.35/hr
     uint256 internal constant TURBO_RATE_PER_HOUR = 1 ether; // $1.00/hr
@@ -79,7 +79,7 @@ contract SessionEscrow {
     }
 
     /// @notice Pays for a time-boxed session. A real, batched, per-session Arc
-    ///         transaction — never per-packet or per-DNS-query.
+    ///         transaction - never per-packet or per-DNS-query.
     /// @return sessionId The purchased session's id.
     function purchaseSession(Tier tier, uint256 hours_)
         external
@@ -105,7 +105,7 @@ contract SessionEscrow {
     }
 
     /// @notice Disburses accumulated revenue to a relay operator's payout address.
-    ///         Not tied to a single session — see contract-level note.
+    ///         Not tied to a single session - see contract-level note.
     function payoutOperator(address relayPayoutAddress, uint256 amount) external onlyAdmin {
         if (amount > address(this).balance) {
             revert InsufficientEscrowBalance(amount, address(this).balance);
@@ -116,7 +116,7 @@ contract SessionEscrow {
     }
 
     /// @notice Refunds a session that never actually opened a tunnel (e.g. the
-    ///         chosen relay went unreachable before the tunnel opened). Admin-only —
+    ///         chosen relay went unreachable before the tunnel opened). Admin-only -
     ///         the orchestrator is the one that knows a tunnel never opened.
     function refundSession(uint256 sessionId) external onlyAdmin {
         Session storage session = sessions[sessionId];

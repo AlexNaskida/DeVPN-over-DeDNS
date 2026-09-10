@@ -6,7 +6,7 @@ import { priceDisplay } from "../pricing.js";
 
 const TIERS: Tier[] = ["lite", "standard", "turbo"];
 
-/** `GET /tiers` — tier list + live prices + relay availability count per tier. */
+/** `GET /tiers` - tier list + live prices + relay availability count per tier. */
 export function registerTiersRoute(app: FastifyInstance) {
   app.get("/tiers", async () => {
     const tiers = await Promise.all(
