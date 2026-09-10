@@ -6,6 +6,7 @@ import { registerTiersRoute } from "./routes/tiers.js";
 import { registerSessionsRoute } from "./routes/sessions.js";
 import { registerSessionDetailRoute } from "./routes/session-detail.js";
 import { registerFailoverRoute } from "./routes/failover.js";
+import { registerEndSessionRoute } from "./routes/end-session.js";
 import { registerRelaysRoute } from "./routes/relays.js";
 import { registerStreamRoute } from "./routes/stream.js";
 
@@ -24,6 +25,7 @@ export async function buildServer() {
   registerSessionsRoute(app);
   registerSessionDetailRoute(app);
   registerFailoverRoute(app);
+  registerEndSessionRoute(app);
   registerRelaysRoute(app);
   registerStreamRoute(app);
 

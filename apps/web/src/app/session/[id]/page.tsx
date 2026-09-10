@@ -2,17 +2,22 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { getSessionDetail, forceRelayFailure, type SessionDetail, type SessionEvent } from "@/lib/api";
+import { getSessionDetail, forceRelayFailure, endSession, type SessionDetail, type SessionEvent } from "@/lib/api";
 import { useSessionStream } from "@/lib/useSessionStream";
 import { StateBadge, STATE_COLOR } from "@/components/StateBadge";
 import { VisibilityPanel } from "@/components/VisibilityPanel";
 import { CountdownTimer } from "@/components/CountdownTimer";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+
+const TERMINAL_STATES = new Set(["EXPIRED_NORMAL", "RELAY_REVOKED", "SESSION_COMPLETE"]);
 
 export default function SessionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [detail, setDetail] = useState<SessionDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [failoverBusy, setFailoverBusy] = useState(false);
+  const [endBusy, setEndBusy] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
   const liveEvents = useSessionStream(id);
 
   useEffect(() => {
@@ -39,6 +44,19 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setFailoverBusy(false);
+    }
+  }
+
+  async function handleEndSession() {
+    setEndBusy(true);
+    setError(null);
+    try {
+      await endSession(id);
+      setShowEndConfirm(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setEndBusy(false);
     }
   }
 
@@ -103,10 +121,38 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <CountdownTimer expiresAt={detail.expiresAt} />
+          <CountdownTimer expiresAt={detail.expiresAt} ended={TERMINAL_STATES.has(currentState)} />
           <StateBadge state={currentState} />
+          {currentState === "ACTIVE" && (
+            <button
+              onClick={() => setShowEndConfirm(true)}
+              style={{
+                background: "transparent",
+                border: "1px solid var(--border)",
+                color: "var(--muted-foreground)",
+                padding: "8px 14px",
+                borderRadius: "var(--radius)",
+                fontSize: 12.5,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              End session
+            </button>
+          )}
         </div>
       </div>
+
+      {showEndConfirm && (
+        <ConfirmDialog
+          title="End this session?"
+          body="This ends your session now. Any unused time on this purchase isn't refunded - there's no partial-refund mechanism."
+          confirmLabel="End session"
+          busy={endBusy}
+          onConfirm={handleEndSession}
+          onCancel={() => setShowEndConfirm(false)}
+        />
+      )}
 
       <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 32 }}>
         <div>

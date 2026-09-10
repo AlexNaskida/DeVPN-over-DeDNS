@@ -111,6 +111,15 @@ export async function forceRelayFailure(
   return res.json();
 }
 
+export async function endSession(id: string): Promise<{ sessionId: string; state: string }> {
+  const res = await fetch(`${ORCHESTRATOR_URL}/sessions/${id}/end`, { method: "POST" });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(body.error ?? `end session failed: ${res.status}`);
+  }
+  return res.json();
+}
+
 export interface RelayInfo {
   operator: string;
   status: string;
