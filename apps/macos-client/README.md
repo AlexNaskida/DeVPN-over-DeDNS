@@ -20,9 +20,14 @@ This does.
    server's `CONNECT` handler requires - solving a real problem: macOS's system
    proxy settings can't inject custom headers, only standard
    `Proxy-Authorization`, so the OS can't point directly at the remote relay.
-5. Menu bar shows connection state, relay name, tier, and a live countdown decoded
-   from the token's own `expiresAt` - and a "Disconnect" that stops the local relay
-   and reverts the system proxy setting.
+5. Clicking the menu bar icon opens a real SwiftUI dashboard (`DashboardView.swift`,
+   `AppState.swift` - a proper `ObservableObject`, not just a status-item title
+   string) showing connection state, relay name, tier, and a live countdown decoded
+   from the token's own `expiresAt`, with a "Disconnect" button that stops the local
+   relay and reverts the system proxy setting.
+6. Ships a real app icon (`Resources/DVoD.icns`, generated from the actual brand
+   logo) and can be installed into `/Applications` so it's Spotlight-searchable like
+   any other app, not just a loose bundle you have to `open` by path.
 
 Verified live, not just built: ran the real `tunnel-server`, issued a real signed
 token, triggered `dvod://connect` via `open`, and fetched `https://example.com`
@@ -58,8 +63,11 @@ proving this app doesn't bypass that.
 ## Build & run
 
 ```bash
-./build-app.sh          # swift build + assembles DVoD.app
-open DVoD.app            # first launch: right-click > Open to pass Gatekeeper
+./build-app.sh                # swift build + assembles DVoD.app (loose bundle here)
+open DVoD.app                  # first launch: right-click > Open to pass Gatekeeper
+
+./build-app.sh --install      # also copies to /Applications, registers with
+                                # Launch Services - Spotlight-searchable, `open -a DVoD` works
 ```
 
 Test the `dvod://` link without the web app:
