@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>DVoD</string>
+    <key>CFBundleDisplayName</key>
+    <string>DVoD</string>
+    <key>CFBundleIdentifier</key>
+    <string>eth.dvod-test.client</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>CFBundleShortVersionString</key>
+    <string>0.1.0</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleExecutable</key>
+    <string>DVoDClient</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>13.0</string>
+    <key>LSUIElement</key>
+    <true/>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>eth.dvod-test.client.connect</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>dvod</string>
+            </array>
+        </dict>
+    </array>
+</dict>
+</plist>

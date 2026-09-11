@@ -5,6 +5,19 @@ export const ORCHESTRATOR_URL =
 export const ORCHESTRATOR_WS_URL =
   process.env.NEXT_PUBLIC_ORCHESTRATOR_WS_URL ?? "ws://localhost:8787/stream";
 
+/** The tunnel-server (relay/handler_cre/tunnel-server) isn't deployed anywhere
+ * public yet - see docs/SECURITY.md. These point at wherever a demo instance
+ * actually runs; default to a local one for `pnpm --filter @dvod/tunnel-server dev`. */
+export const TUNNEL_HOST = process.env.NEXT_PUBLIC_TUNNEL_HOST ?? "127.0.0.1";
+export const TUNNEL_PORT = process.env.NEXT_PUBLIC_TUNNEL_PORT ?? "8443";
+
+/** Builds the apps/macos-client `dvod://connect` link for a purchased session's
+ * token - see apps/macos-client/README.md for what actually happens when it's
+ * clicked (a real local CONNECT-proxy relay, real system-proxy configuration). */
+export function macOsConnectUrl(token: string): string {
+  return `dvod://connect?token=${encodeURIComponent(token)}&host=${encodeURIComponent(TUNNEL_HOST)}&port=${TUNNEL_PORT}`;
+}
+
 export interface TierInfo {
   tier: Tier;
   reservedMbps: number;

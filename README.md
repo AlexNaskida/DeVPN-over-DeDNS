@@ -9,13 +9,15 @@
 > x402, as a batched per-session purchase.
 
 The paragraph above is the target design. **The payment/authorization/revocation
-control plane is real and live today; the traffic-tunneling data plane is not yet
-connected end to end** - see `docs/SECURITY.md` for the precise, current line between
-the two.
+control plane is real and live today; the traffic-tunneling data plane has a real
+client (`apps/macos-client`) and a real relay (`tunnel-server`), verified working
+together end to end locally, but the relay isn't deployed anywhere publicly
+reachable yet** - see `docs/SECURITY.md` for the precise, current line between what's
+real and what's still a documented gap.
 
 ## Architecture
 
-### Current design
+### Target design
 
 ![DVoD target architecture](docs/architecture.jpg)
 
@@ -39,6 +41,16 @@ expires or the watchdog contract revokes the relay. Payment is a plain, public
 `purchaseSession` transaction (not private, not x402-settled - see "Coming next" below)
 and the tunnel-server runs as a standalone process, not inside a confidential handler
 yet.
+
+A real client now exists too - `apps/macos-client`, a macOS menu-bar app launched by
+the web dashboard's "Connect via macOS app" link. It runs a local CONNECT-proxy relay,
+points the system's HTTP/HTTPS proxy at it, and forwards to the real `tunnel-server`
+with the session token - verified end to end with a live fetch through the entire
+chain. Still gated on one thing: `tunnel-server` itself isn't deployed anywhere
+publicly reachable yet, so this only works against a locally-run instance today. See
+`apps/macos-client/README.md` for the full scope (it's an HTTP/HTTPS proxy, not a
+full system VPN - real `NetworkExtension` support needs an Apple entitlement approval
+that doesn't fit a hackathon timeline).
 
 ## Status
 

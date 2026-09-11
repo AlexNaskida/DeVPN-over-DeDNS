@@ -2,7 +2,14 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { getSessionDetail, forceRelayFailure, endSession, type SessionDetail, type SessionEvent } from "@/lib/api";
+import {
+  getSessionDetail,
+  forceRelayFailure,
+  endSession,
+  macOsConnectUrl,
+  type SessionDetail,
+  type SessionEvent,
+} from "@/lib/api";
 import { useSessionStream } from "@/lib/useSessionStream";
 import { StateBadge, STATE_COLOR } from "@/components/StateBadge";
 import { VisibilityPanel } from "@/components/VisibilityPanel";
@@ -34,6 +41,13 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
   const currentState = allEvents.at(-1)?.toState ?? detail?.state ?? "unknown";
   const currentRelay = [...allEvents].reverse().find((e) => e.relay)?.relay ?? detail?.relay;
   const currentTier = [...allEvents].reverse().find((e) => e.tier)?.tier;
+
+  // Read after mount, not during render - sessionStorage doesn't exist during SSR,
+  // and reading it inline would mismatch the server-rendered HTML.
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
+  useEffect(() => {
+    setSessionToken(sessionStorage.getItem(`dvod-session-token-${id}`));
+  }, [id]);
 
   async function handleForceFailure() {
     setFailoverBusy(true);
@@ -123,6 +137,23 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <CountdownTimer expiresAt={detail.expiresAt} ended={TERMINAL_STATES.has(currentState)} />
           <StateBadge state={currentState} />
+          {currentState === "ACTIVE" && sessionToken && (
+            <a
+              href={macOsConnectUrl(sessionToken)}
+              title="Opens the DVoD macOS app (Demo Session) - see docs/SECURITY.md for what this actually connects to today."
+              style={{
+                background: "var(--primary)",
+                color: "var(--primary-foreground)",
+                textDecoration: "none",
+                padding: "8px 14px",
+                borderRadius: "var(--radius)",
+                fontSize: 12.5,
+                fontWeight: 600,
+              }}
+            >
+              Connect via macOS app (Demo Session)
+            </a>
+          )}
           {currentState === "ACTIVE" && (
             <button
               onClick={() => setShowEndConfirm(true)}
