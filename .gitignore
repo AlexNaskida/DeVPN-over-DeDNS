@@ -12,3 +12,5 @@ next-env.d.ts
 *.log
 .DS_Store
 coverage/
+apps/macos-client/.build/
+apps/macos-client/DVoD.app/
