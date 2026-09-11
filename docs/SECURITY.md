@@ -45,6 +45,19 @@ for anything beyond a demo.
   confidential workflows, which - verified directly against Chainlink's own docs
   (`docs/chainlink-cre-findings.md`) - categorically cannot run a persistent
   proxy/DNS server. This is a real platform-shape mismatch, not a time constraint.
+- **Payment is fully public on-chain.** Every `purchaseSession` transaction reveals
+  the payer's address, tier, hours, and amount to anyone watching Arc - a real privacy
+  weakness for a product pitched as anonymous, since payment and usage can be
+  correlated by wallet even if the traffic itself is eventually anonymous. Arc has
+  announced a native confidential-transactions feature ("Arc Privacy" - encrypt a
+  standard EVM transaction, submit the ciphertext as calldata to a privacy
+  precompile; architecturally supports arbitrary contract calls, not just plain
+  transfers, so it would genuinely fit `purchaseSession(tier, hours)` without a
+  redesign) - but checked directly against Arc's own docs
+  (`docs.arc.io/arc/concepts/opt-in-privacy`), not press coverage: **"Privacy
+  features are on the roadmap and not yet available on Arc."** No precompile is
+  deployed on the testnet we use. Worth revisiting once it ships - Arc's public
+  mainnet is scheduled for September 16, 2026.
 - **Attestation content is a stub.** `WatchdogRevoker` correctly revokes on a
   attestation-hash mismatch, but the hash every operator publishes today is
   `keccak256("STUB: no real CRE handler binary yet for <name>")` - there's no real
