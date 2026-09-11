@@ -32,13 +32,18 @@ the README, the README (updated more often, closer to the code) wins - open an i
 This is the section most likely to matter to anyone deciding whether to trust this
 for anything beyond a demo.
 
-- **No user traffic is actually tunneled anywhere yet.** `relay/handler_cre/tunnel-server`
-  is real, working HTTP CONNECT proxy code - but it isn't deployed anywhere reachable
-  (every registered operator endpoint in ENSv2 is a placeholder `.example` domain), and
-  there's no client that would point a user's device at it even if it were. Purchasing
-  a session today gets you a real payment, a real signed token, and a real live
-  dashboard - not a VPN tunnel. See the session dashboard's "What's visible to whom"
-  panel for the same disclosure in-product.
+- **A real client now exists (`apps/macos-client`), but `tunnel-server` still isn't
+  publicly deployed.** The client side of "actually route my traffic" is real and
+  verified: a menu-bar app that runs a local CONNECT-proxy relay, points the Mac's
+  system HTTP/HTTPS proxy at it, and forwards to the real `tunnel-server` with the
+  session token - tested end to end with a live fetch through the whole chain. What's
+  still missing: `relay/handler_cre/tunnel-server` itself isn't deployed anywhere
+  publicly reachable (every registered operator endpoint in ENSv2 is still a
+  placeholder `.example` domain), so this only works against a locally-run instance
+  today - see `apps/macos-client/README.md`'s "Demo Session" scope note. It's also
+  HTTP/HTTPS-proxy-scoped, not a full system VPN - see that same README for why (the
+  Apple Network Extension entitlement needed for a real `NEVPNManager` tunnel
+  requires Apple's formal approval, not obtainable in a hackathon window).
 - **No confidential compute.** Even once a tunnel-server is deployed, the relay
   operator's own process can read your DNS queries and proxied traffic in the clear.
   The brief's "operator can't see your traffic" claim requires Chainlink CRE
