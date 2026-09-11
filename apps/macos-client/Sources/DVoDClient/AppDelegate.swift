@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import SwiftUI
 
 /// Everything a connect link needs - see web app's `dvod://connect` link builder
 /// (apps/web/src/app/session/[id]/page.tsx). `host`/`port` point at a real,
@@ -13,6 +14,9 @@ struct ConnectRequest {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+    private let popover = NSPopover()
+    private let state = AppState()
+
     private var proxyServer: LocalProxyServer?
     private var activeNetworkService: String?
     private var expiryTimer: Timer?
@@ -21,6 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory) // menu-bar only, no Dock icon
+
         if let icon = NSImage(named: "MenuBarIcon") {
             icon.isTemplate = true // macOS recolors it to match the menu bar (white on dark)
             icon.size = NSSize(width: 18, height: 18)
@@ -28,7 +33,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             statusItem.button?.title = "DVoD" // fallback if the icon didn't ship in the bundle
         }
-        rebuildMenu(connected: false, payload: nil)
+        statusItem.button?.action = #selector(togglePopover)
+        statusItem.button?.target = self
+
+        popover.behavior = .transient // closes when clicking elsewhere
+        popover.contentViewController = NSHostingController(
+            rootView: DashboardView(
+                state: state,
+                onDisconnect: { [weak self] in self?.disconnect() },
+                onQuit: { [weak self] in self?.quit() },
+            ),
+        )
 
         NSAppleEventManager.shared().setEventHandler(
             self,
@@ -36,6 +51,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             forEventClass: AEEventClass(kInternetEventClass),
             andEventID: AEEventID(kAEGetURL),
         )
+    }
+
+    @objc private func togglePopover() {
+        guard let button = statusItem.button else { return }
+        if popover.isShown {
+            popover.performClose(nil)
+        } else {
+            state.now = Date() // refresh the countdown the instant it's opened
+            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        }
     }
 
     @objc private func handleGetURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent: NSAppleEventDescriptor) {
@@ -81,13 +106,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         activeNetworkService = service
         SystemProxy.enable(service: service, host: "127.0.0.1", port: Int(localPort))
 
-        rebuildMenu(connected: true, payload: payload)
+        state.payload = payload
+        state.connected = true
+        state.now = Date()
         expiryTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            self?.rebuildMenu(connected: true, payload: payload)
+            self?.state.now = Date()
         }
     }
 
-    @objc private func disconnect() {
+    private func disconnect() {
         expiryTimer?.invalidate()
         expiryTimer = nil
         proxyServer?.stop()
@@ -96,42 +123,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             SystemProxy.disable(service: service)
         }
         activeNetworkService = nil
-        rebuildMenu(connected: false, payload: nil)
+        state.connected = false
+        state.payload = nil
     }
 
-    private func rebuildMenu(connected: Bool, payload: SessionTokenPayload?) {
-        let menu = NSMenu()
-
-        if connected, let payload {
-            let remaining = max(0, payload.expiresAt - Date().timeIntervalSince1970)
-            // Icon stays put; only the short text next to it changes - avoids the
-            // "DVoD" wordmark wrapping/clipping in the menu bar's fixed-height slot.
-            statusItem.button?.title = " \(Self.formatDuration(remaining))"
-            menu.addItem(withTitle: "Connected via \(payload.relay)", action: nil, keyEquivalent: "").isEnabled = false
-            menu.addItem(withTitle: "Tier: \(payload.tier)", action: nil, keyEquivalent: "").isEnabled = false
-            menu.addItem(NSMenuItem.separator())
-            let item = NSMenuItem(title: "Disconnect", action: #selector(disconnect), keyEquivalent: "")
-            item.target = self
-            menu.addItem(item)
-        } else {
-            statusItem.button?.title = ""
-            menu.addItem(withTitle: "Not connected", action: nil, keyEquivalent: "").isEnabled = false
-            menu.addItem(withTitle: "Buy a session in the web app, then click", action: nil, keyEquivalent: "").isEnabled = false
-            menu.addItem(withTitle: "\"Connect via macOS app\" on the dashboard.", action: nil, keyEquivalent: "").isEnabled = false
-        }
-
-        menu.addItem(NSMenuItem.separator())
-        menu.addItem(withTitle: "Quit DVoD", action: #selector(quit), keyEquivalent: "q")
-        statusItem.menu = menu
-    }
-
-    @objc private func quit() {
+    private func quit() {
         disconnect()
         NSApp.terminate(nil)
-    }
-
-    private static func formatDuration(_ seconds: TimeInterval) -> String {
-        let total = Int(seconds)
-        return String(format: "%d:%02d:%02d", total / 3600, (total % 3600) / 60, total % 60)
     }
 }
