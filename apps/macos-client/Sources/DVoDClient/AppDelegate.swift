@@ -28,6 +28,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let localPort: UInt16 = 8899
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        terminateOtherRunningInstances() // a stale leftover process (common during
+        // dev - rebuilding and relaunching without quitting the old one first)
+        // leaves a second, orphaned status item around with a wrong/stale screen
+        // frame - only one instance should ever be live.
+
         NSApp.setActivationPolicy(.accessory) // menu-bar only, no permanent Dock icon
 
         if let icon = NSImage(named: "MenuBarIcon") {
@@ -56,6 +61,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             forEventClass: AEEventClass(kInternetEventClass),
             andEventID: AEEventID(kAEGetURL),
         )
+    }
+
+    private func terminateOtherRunningInstances() {
+        guard let bundleId = Bundle.main.bundleIdentifier else { return }
+        let myPid = ProcessInfo.processInfo.processIdentifier
+        for app in NSWorkspace.shared.runningApplications
+        where app.bundleIdentifier == bundleId && app.processIdentifier != myPid {
+            app.forceTerminate()
+        }
     }
 
     /// Called when the Dock icon (while running) or a relaunch requests the app
