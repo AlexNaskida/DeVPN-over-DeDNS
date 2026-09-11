@@ -164,10 +164,17 @@ platform-shape mismatch the brief itself didn't anticipate this sharply. So:
   excludes `bob`, revoked in Phase 1) and `POST /sessions/:tier/:hours` (a 402 quote,
   then a signed session token once a real `purchaseSession` tx is verified against
   the chain). Tested end-to-end against the actual live deployment, not mocks.
-- **Architecture note:** x402 v2's real settlement moves an asset to `payTo`, with no
-  generic-calldata path for calling a specific contract function - so the quote
-  points the client at `purchaseSession` directly rather than routing through an
-  x402 facilitator. See `docs/arc-testnet-deploy.md` for the full reasoning.
+- **Architecture note:** real x402 can't settle this payment, for reasons deeper than
+  "no generic calldata" - checked directly against `@x402/evm`'s actual code: every
+  scheme it ships is built on ERC-20 mechanics (EIP-3009, Permit2), and Arc's USDC is
+  the chain's native gas token, not an ERC-20 contract, so none of those methods exist
+  to call. `@x402/core` *is* scheme-pluggable, so a custom scheme is architecturally
+  possible - but it wouldn't add real capability, since standard wallets (MetaMask
+  included) deliberately don't support signing a transaction without also
+  broadcasting it, which is what x402's deferred-settlement model depends on. So the
+  quote points the client at `purchaseSession` directly - a real, verified
+  transaction, just not x402-settled. See `docs/arc-testnet-deploy.md` for the full
+  investigation.
 
 **Phase 1 - what's real, on Sepolia, right now:**
 
