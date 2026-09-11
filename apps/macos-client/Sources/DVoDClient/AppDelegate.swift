@@ -1,6 +1,5 @@
 import AppKit
 import Foundation
-import SwiftUI
 
 /// Everything a connect link needs - see web app's `dvod://connect` link builder
 /// (apps/web/src/app/session/[id]/page.tsx). `host`/`port` point at a real,
@@ -14,8 +13,12 @@ struct ConnectRequest {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-    private let popover = NSPopover()
     private let state = AppState()
+    private lazy var dashboardWindow = DashboardWindowController(
+        state: state,
+        onDisconnect: { [weak self] in self?.disconnect() },
+        onQuit: { [weak self] in self?.quit() },
+    )
 
     private var proxyServer: LocalProxyServer?
     private var activeNetworkService: String?
@@ -24,7 +27,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let localPort: UInt16 = 8899
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NSApp.setActivationPolicy(.accessory) // menu-bar only, no Dock icon
+        NSApp.setActivationPolicy(.accessory) // no permanent Dock icon, but the
+        // dashboard is still a real window, not menu-only - see showDashboard().
 
         if let icon = NSImage(named: "MenuBarIcon") {
             icon.isTemplate = true // macOS recolors it to match the menu bar (white on dark)
@@ -33,17 +37,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             statusItem.button?.title = "DVoD" // fallback if the icon didn't ship in the bundle
         }
-        statusItem.button?.action = #selector(togglePopover)
+        statusItem.button?.action = #selector(showDashboard)
         statusItem.button?.target = self
-
-        popover.behavior = .transient // closes when clicking elsewhere
-        popover.contentViewController = NSHostingController(
-            rootView: DashboardView(
-                state: state,
-                onDisconnect: { [weak self] in self?.disconnect() },
-                onQuit: { [weak self] in self?.quit() },
-            ),
-        )
 
         NSAppleEventManager.shared().setEventHandler(
             self,
@@ -51,16 +46,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             forEventClass: AEEventClass(kInternetEventClass),
             andEventID: AEEventID(kAEGetURL),
         )
+
+        // "Opening it as an app" - launching DVoD.app shows the real dashboard
+        // window immediately, not just a menu bar icon with nothing visible.
+        showDashboard()
     }
 
-    @objc private func togglePopover() {
-        guard let button = statusItem.button else { return }
-        if popover.isShown {
-            popover.performClose(nil)
-        } else {
-            state.now = Date() // refresh the countdown the instant it's opened
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-        }
+    /// Also called when the Dock icon (while running) or a relaunch requests
+    /// the app come back to the foreground - standard macOS "reopen" behavior.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
+        showDashboard()
+        return true
+    }
+
+    @objc private func showDashboard() {
+        state.now = Date() // refresh the countdown the instant it's shown
+        dashboardWindow.showAndFocus()
     }
 
     @objc private func handleGetURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent: NSAppleEventDescriptor) {
