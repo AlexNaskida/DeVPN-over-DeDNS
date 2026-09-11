@@ -9,9 +9,10 @@ swift build -c release
 
 APP="DVoD.app"
 rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp ".build/release/DVoDClient" "$APP/Contents/MacOS/DVoDClient"
 cp "Resources/Info.plist" "$APP/Contents/Info.plist"
+cp Resources/MenuBarIcon*.png "$APP/Contents/Resources/"
 
 echo "Built $APP"
 echo "Run: open $APP"
