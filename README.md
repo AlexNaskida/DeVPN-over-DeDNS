@@ -22,18 +22,7 @@ on Arc) all complete **before** any tunnel opens. Once open, the session runs fu
 anonymous - DNS + proxy traffic inside the relay's attested confidential handler - until
 it expires or the watchdog contract revokes the relay.
 
-### Target architecture (not yet built)
 
-![DVoD target architecture](docs/target-architecture.jpg)
-
-This is the fuller target design - useful for seeing where the pieces are meant to go,
-but it draws two things that don't exist yet: a separate on-chain "Session Router"
-(we only have `SessionEscrow.sol`), and the Chainlink CRE confidential handler actually
-decrypting tokens, opening tunnels, and resolving DNS. `docs/chainlink-cre-findings.md`
-covers why that last part is a real platform-shape mismatch (CRE workflows are
-event-driven and stateless, not a place to run a persistent proxy/DNS server), not
-just unbuilt. Treat this diagram as intent, and the one above plus `docs/SECURITY.md`
-as what's actually there.
 
 ## Status
 
