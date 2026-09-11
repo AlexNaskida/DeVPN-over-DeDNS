@@ -40,13 +40,39 @@ DEPLOYER_PRIVATE_KEY=<any key - nothing sent without --broadcast> \
 Add `--rpc-url https://rpc.testnet.arc.io --broadcast` in place of `--fork-url` with a
 funded key to deploy for real.
 
-## Architecture note - why `purchaseSession` isn't x402-facilitator-settled directly
+## Architecture note - why this isn't real x402, and why real x402 can't work here
 
-x402's real settlement mechanism (verified against `@x402/core`'s actual types) moves
-an *asset* to a `payTo` address - it has no generic-calldata path for calling a
-specific contract function with arguments. So the orchestrator's `POST
-/sessions/:tier/:hours` uses `@x402/fastify` for the 402 quote handshake, but the
-actual payment is the client's own `purchaseSession` transaction against this
-contract - that's what produces a real, session-specific on-chain event rather than a
-bare value transfer with no metadata. The orchestrator watches for that transaction to
-confirm payment before issuing a session token.
+**Correction:** an earlier version of this note claimed the orchestrator uses
+`@x402/fastify` for the 402 handshake. That was never true - it isn't a dependency
+anywhere in the repo. `POST /sessions/:tier/:hours` hand-builds a 402 response that's
+*shaped* like x402 (same `accepts`/quote structure), but no `@x402/*` package is
+involved in that response at all.
+
+The real reason isn't just "no generic-calldata path" either - it's deeper, checked
+directly against `@x402/evm`'s actual code (installed and inspected, not assumed):
+
+- **Arc isn't in `@x402/evm`'s supported network list**, and more fundamentally,
+  **every EVM scheme it ships (`exact`, `batch-settlement`, `auth-capture`) is built
+  on ERC-20 mechanics** - EIP-3009 `transferWithAuthorization`, Permit2 allowances, or
+  an escrow contract's ERC-20 "token collector." Arc's USDC is the chain's *native*
+  gas token, not an ERC-20 contract, so none of these methods exist to call.
+- `@x402/core` **is** explicitly scheme-pluggable (`x402ClientConfig.schemes` takes a
+  custom `SchemeNetworkClient`/`SchemeNetworkServer`/`SchemeNetworkFacilitator` for
+  any network identifier), so a custom "native transfer" scheme for Arc is
+  architecturally possible. But it wouldn't unlock x402's actual value proposition:
+  MetaMask (and browser wallets generally) deliberately don't support
+  `eth_signTransaction` - only `eth_sendTransaction`, which signs and broadcasts
+  atomically. x402's core idea (client signs a payment authorization off-chain, a
+  facilitator settles/broadcasts it later, same as EIP-3009) has no equivalent for a
+  native-value payment through a standard wallet: there's no way to get a
+  signed-but-unbroadcast transaction to defer. A custom scheme's client side could do
+  nothing more than `eth_sendTransaction` and wait for the receipt - which is exactly
+  what `purchaseSession` already does today, just not wrapped in x402's official
+  types.
+
+So: the orchestrator's `POST /sessions/:tier/:hours` returns an x402-*shaped* 402
+quote, but the actual payment is the client's own `purchaseSession` transaction
+against this contract, confirmed by the orchestrator independently re-reading the
+transaction receipt before issuing a session token. This is a genuine protocol/token-model
+incompatibility, not a shortcut - see `docs/SECURITY.md` for how this fits into the
+project's broader honesty accounting.
