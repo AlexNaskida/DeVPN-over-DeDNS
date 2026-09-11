@@ -15,7 +15,7 @@ the two.
 
 ## Architecture
 
-### Target design (in progress - target: before submission)
+### Current design
 
 ![DVoD target architecture](docs/architecture.jpg)
 
@@ -26,10 +26,9 @@ tunnels, and resolving DNS, and private/x402-settled payment. `docs/chainlink-cr
 covers why the confidential-handler part can't run as a Chainlink CRE workflow itself
 (CRE workflows are event-driven and stateless, not a place to run a persistent
 proxy/DNS server) - closing that gap means real confidential compute running outside
-CRE, not CRE running longer. Treat this diagram as intent; the one below plus
-`docs/SECURITY.md` is what's actually there today.
+CRE, not CRE running longer.
 
-### Current implementation - what's actually running today
+### Current implementation
 
 ![DVoD architecture](docs/architecture-2.jpg)
 
