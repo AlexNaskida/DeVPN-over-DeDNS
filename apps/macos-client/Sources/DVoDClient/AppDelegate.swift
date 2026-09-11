@@ -12,7 +12,7 @@ struct ConnectRequest {
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+    private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private var proxyServer: LocalProxyServer?
     private var activeNetworkService: String?
     private var expiryTimer: Timer?
@@ -21,7 +21,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory) // menu-bar only, no Dock icon
-        statusItem.button?.title = "DVoD"
+        if let icon = NSImage(named: "MenuBarIcon") {
+            icon.isTemplate = true // macOS recolors it to match the menu bar (white on dark)
+            icon.size = NSSize(width: 18, height: 18)
+            statusItem.button?.image = icon
+        } else {
+            statusItem.button?.title = "DVoD" // fallback if the icon didn't ship in the bundle
+        }
         rebuildMenu(connected: false, payload: nil)
 
         NSAppleEventManager.shared().setEventHandler(
@@ -98,7 +104,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         if connected, let payload {
             let remaining = max(0, payload.expiresAt - Date().timeIntervalSince1970)
-            statusItem.button?.title = "DVoD ● \(Self.formatDuration(remaining))"
+            // Icon stays put; only the short text next to it changes - avoids the
+            // "DVoD" wordmark wrapping/clipping in the menu bar's fixed-height slot.
+            statusItem.button?.title = " \(Self.formatDuration(remaining))"
             menu.addItem(withTitle: "Connected via \(payload.relay)", action: nil, keyEquivalent: "").isEnabled = false
             menu.addItem(withTitle: "Tier: \(payload.tier)", action: nil, keyEquivalent: "").isEnabled = false
             menu.addItem(NSMenuItem.separator())
@@ -106,7 +114,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             item.target = self
             menu.addItem(item)
         } else {
-            statusItem.button?.title = "DVoD"
+            statusItem.button?.title = ""
             menu.addItem(withTitle: "Not connected", action: nil, keyEquivalent: "").isEnabled = false
             menu.addItem(withTitle: "Buy a session in the web app, then click", action: nil, keyEquivalent: "").isEnabled = false
             menu.addItem(withTitle: "\"Connect via macOS app\" on the dashboard.", action: nil, keyEquivalent: "").isEnabled = false
