@@ -1,5 +1,4 @@
 import AppKit
-import SwiftUI
 
 /// Everything a connect link needs - see web app's `dvod://connect` link builder
 /// (apps/web/src/app/session/[id]/page.tsx). `host`/`port` point at a real,
@@ -13,7 +12,6 @@ struct ConnectRequest {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-    private let popover = NSPopover()
     private let state = AppState()
     private lazy var dashboardWindow = DashboardWindowController(
         state: state,
@@ -30,8 +28,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         terminateOtherRunningInstances() // a stale leftover process (common during
         // dev - rebuilding and relaunching without quitting the old one first)
-        // leaves a second, orphaned status item around with a wrong/stale screen
-        // frame - only one instance should ever be live.
+        // leaves a second, orphaned status item around - only one instance should
+        // ever be live.
 
         NSApp.setActivationPolicy(.accessory) // menu-bar only, no permanent Dock icon
 
@@ -42,18 +40,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             statusItem.button?.title = "DVoD" // fallback if the icon didn't ship in the bundle
         }
-        statusItem.button?.action = #selector(toggleExtension)
-        statusItem.button?.target = self
 
-        popover.behavior = .transient // closes when clicking elsewhere
-        popover.contentViewController = NSHostingController(
-            rootView: ExtensionView(
-                state: state,
-                onDisconnect: { [weak self] in self?.disconnect() },
-                onOpenApp: { [weak self] in self?.openApp() },
-                onQuit: { [weak self] in self?.quit() },
-            ),
-        )
+        // A native NSMenu, not a custom-positioned NSPopover - AppKit places this
+        // itself, correctly, every time, with zero positioning code of ours to get
+        // wrong. The popover approach was fragile in practice; this isn't.
+        rebuildMenu()
 
         NSAppleEventManager.shared().setEventHandler(
             self,
@@ -72,26 +63,47 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    /// Called when the Dock icon (while running) or a relaunch requests the app
-    /// come back to the foreground - shows the same extension a click would.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
-        toggleExtension()
+        openApp()
         return true
     }
 
-    @objc private func toggleExtension() {
-        guard let button = statusItem.button else { return }
-        if popover.isShown {
-            popover.performClose(nil)
-            return
+    private func rebuildMenu() {
+        let menu = NSMenu()
+
+        if state.connected, let payload = state.payload {
+            menu.addItem(disabledItem("Connected via \(payload.relay)"))
+            menu.addItem(disabledItem("Tier: \(payload.tier.capitalized) · \(formatDuration(state.remainingSeconds)) left"))
+        } else {
+            menu.addItem(disabledItem("Not connected"))
         }
-        state.now = Date() // refresh the countdown the instant it's opened
-        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+
+        menu.addItem(NSMenuItem.separator())
+
+        menu.addItem(actionItem("Open app", #selector(openApp)))
+        if state.connected {
+            menu.addItem(actionItem("Disconnect", #selector(disconnect)))
+        }
+
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(actionItem("Quit DVoD", #selector(quit), keyEquivalent: "q"))
+
+        statusItem.menu = menu
     }
 
-    /// "Open app" in the extension - the real, 80%-of-screen window.
-    private func openApp() {
-        popover.performClose(nil)
+    private func disabledItem(_ title: String) -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+        item.isEnabled = false
+        return item
+    }
+
+    private func actionItem(_ title: String, _ action: Selector, keyEquivalent: String = "") -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: action, keyEquivalent: keyEquivalent)
+        item.target = self
+        return item
+    }
+
+    @objc private func openApp() {
         state.now = Date()
         dashboardWindow.showAndFocus()
     }
@@ -142,12 +154,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         state.payload = payload
         state.connected = true
         state.now = Date()
+        rebuildMenu()
         expiryTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            self?.state.now = Date()
+            guard let self else { return }
+            self.state.now = Date()
+            self.rebuildMenu() // keeps the countdown in "Tier: ... left" current
         }
     }
 
-    private func disconnect() {
+    @objc private func disconnect() {
         expiryTimer?.invalidate()
         expiryTimer = nil
         proxyServer?.stop()
@@ -158,10 +173,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         activeNetworkService = nil
         state.connected = false
         state.payload = nil
+        rebuildMenu()
     }
 
-    private func quit() {
+    @objc private func quit() {
         disconnect()
         NSApp.terminate(nil)
+    }
+
+    private func formatDuration(_ seconds: TimeInterval) -> String {
+        let total = Int(seconds)
+        return String(format: "%d:%02d:%02d", total / 3600, (total % 3600) / 60, total % 60)
     }
 }
