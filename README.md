@@ -15,25 +15,31 @@ the two.
 
 ## Architecture
 
-![DVoD architecture](docs/architecture.jpg)
+### Target design (in progress - target: before submission)
 
-Payment and permission checks (ENSv2 registry lookup, attestation check, x402 purchase
-on Arc) all complete **before** any tunnel opens. Once open, the session runs fully
-anonymous - DNS + proxy traffic inside the relay's attested confidential handler - until
-it expires or the watchdog contract revokes the relay.
-
-### Target architecture (not yet built)
-
-![DVoD target architecture](docs/target-architecture.jpg)
+![DVoD target architecture](docs/architecture.jpg)
 
 This is the fuller target design - useful for seeing where the pieces are meant to go,
-but it draws two things that don't exist yet: a separate on-chain "Session Router"
-(we only have `SessionEscrow.sol`), and the Chainlink CRE confidential handler actually
-decrypting tokens, opening tunnels, and resolving DNS. `docs/chainlink-cre-findings.md`
-covers why that last part is a real platform-shape mismatch (CRE workflows are
-event-driven and stateless, not a place to run a persistent proxy/DNS server), not
-just unbuilt. Treat this diagram as intent, and the one above plus `docs/SECURITY.md`
-as what's actually there.
+but it draws things that don't exist yet: a separate on-chain "Session Router" (we only
+have `SessionEscrow.sol`), the confidential handler actually decrypting tokens, opening
+tunnels, and resolving DNS, and private/x402-settled payment. `docs/chainlink-cre-findings.md`
+covers why the confidential-handler part can't run as a Chainlink CRE workflow itself
+(CRE workflows are event-driven and stateless, not a place to run a persistent
+proxy/DNS server) - closing that gap means real confidential compute running outside
+CRE, not CRE running longer. Treat this diagram as intent; the one below plus
+`docs/SECURITY.md` is what's actually there today.
+
+### Current implementation - what's actually running today
+
+![DVoD architecture](docs/architecture-2.jpg)
+
+Payment and permission checks (ENSv2 registry lookup, attestation check, x402-shaped
+purchase on Arc) all complete **before** any tunnel opens. Once open, the session runs
+fully anonymous - DNS + proxy traffic through the relay's tunnel-server - until it
+expires or the watchdog contract revokes the relay. Payment is a plain, public
+`purchaseSession` transaction (not private, not x402-settled - see "Coming next" below)
+and the tunnel-server runs as a standalone process, not inside a confidential handler
+yet.
 
 ## Status
 
@@ -66,6 +72,39 @@ over the deployed site's own WebSocket connection with no page reload.
 state → revocation/failover) is real, end to end, live. It does not mean user traffic
 is actually tunneled anywhere yet - see `docs/SECURITY.md`'s scope note for exactly
 what's real vs. not in the data plane.
+
+## Pricing model — pay-as-you-go, not a subscription
+
+There's no account, no card on file, and no recurring charge. Every session is a
+one-off purchase: pick a tier, pick how many hours (1-24), pay exactly
+`rate(tier) * hours` in USDC up front, get a time-boxed session that expires on its
+own. See [`docs/PRICING.md`](docs/PRICING.md) for the full rate card and where the
+payment actually goes; the honesty notes there (illustrative flat rate, no
+protocol fee yet, admin-only refunds) are worth reading before quoting a number.
+
+| Tier | Reserved throughput | Rate |
+|---|---|---|
+| Lite | 5 Mbps | $0.10/hr |
+| Standard | 25 Mbps | $0.35/hr |
+| Turbo | 100 Mbps | $1.00/hr |
+
+**Note on x402:** the quote step (`GET /tiers`, `POST /sessions/:tier/:hours`) follows
+x402's request-a-price-then-pay shape, but the payment itself is a direct
+`purchaseSession` call, not real x402 settlement - Arc's USDC is a native gas token,
+not an ERC-20, so none of `@x402/evm`'s existing schemes apply. See Phase 2's
+architecture note below for the full investigation.
+
+### Coming next - private payments
+
+Every `purchaseSession` payment today is a plain, public transaction: amount, tier,
+and wallet are all visible on-chain. Arc has announced a native confidential-
+transactions feature ("Arc Privacy" - encrypt a standard EVM transaction, submit
+the ciphertext as calldata to a privacy precompile) that would fit
+`purchaseSession(tier, hours)` without a redesign - but per Arc's own docs
+(`docs.arc.io/arc/concepts/opt-in-privacy`), it isn't available yet. Wiring it in,
+along with a genuine `@x402/core` custom settlement scheme once the constraints
+documented above are workable, is next up once both ship. See `docs/SECURITY.md`
+for the current honest scope.
 
 ## Build phases
 
@@ -139,8 +178,8 @@ platform-shape mismatch the brief itself didn't anticipate this sharply. So:
 
 - `relay/handler_cre/tunnel-server` is a **real, working HTTP CONNECT proxy** - real
   DNS resolution, real bidirectional proxying, verified with an actual live fetch of
-  `https://example.com` through it - running in a plain process with a visible
-  **SIMULATED** badge (`GET /health`), because CRE can't run it.
+  `https://example.com` through it - running standalone as a plain process
+  (`GET /health` reports this), because CRE can't run it.
 - `relay/handler_cre/attestation-refresher` is a **real Chainlink CRE workflow**
   (Chainlink's own `keeper-bot-ts` template, adapted), genuinely executed via the
   real CRE CLI: compiled to actual WASM, read live Sepolia state, produced a
@@ -201,7 +240,7 @@ platform-shape mismatch the brief itself didn't anticipate this sharply. So:
 ```
 /apps            web app + orchestrator service
 /packages        session-spec, ui, chain-adapters, identity
-/relay/handler_cre/tunnel-server         real, SIMULATED-labeled tunnel/DNS/proxy
+/relay/handler_cre/tunnel-server         real tunnel/DNS/proxy, runs standalone (outside CRE)
 /relay/handler_cre/attestation-refresher real Chainlink CRE workflow (Bun/CRE CLI project)
 /contracts       SessionEscrow.sol (Arc), WatchdogRevoker.sol + AttestationRefresherReceiver.sol (ENS)
 /docs            architecture diagram, security/pricing docs, demo script

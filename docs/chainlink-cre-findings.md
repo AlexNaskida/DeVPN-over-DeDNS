@@ -21,8 +21,8 @@ runs inside a Chainlink CRE confidential handler." Verified directly against
 
 **Conclusion: CRE cannot run a tunnel-termination + DNS + outbound-proxy server -
 categorically, not just "not in the time available."** This is why
-`relay/handler_cre/tunnel-server` is a plain process with a visible SIMULATED badge,
-not a CRE workflow.
+`relay/handler_cre/tunnel-server` runs standalone as a plain process (`GET /health`
+reports this), not a CRE workflow.
 
 ## What we built instead - a real, narrow, honest use of CRE
 
@@ -82,7 +82,7 @@ successfully - see above.
 ### Still a STUB, honestly
 
 The hash being written isn't from a real relay binary - `relay/handler_cre/
-tunnel-server` (the simulated tunnel/DNS/proxy process) either doesn't exist yet or,
+tunnel-server` (the standalone tunnel/DNS/proxy process) either doesn't exist yet or,
 once it does, isn't yet wired to produce a real build manifest for this workflow to
 hash. The workflow computes a placeholder hash from its own config. What's real is
 the pipeline (CRE execution → signed report → on-chain write); what's not yet real is
