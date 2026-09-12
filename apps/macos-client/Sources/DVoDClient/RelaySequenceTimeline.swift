@@ -10,32 +10,37 @@ import SwiftUI
 struct RelaySequenceTimeline: View {
     let currentStep: ConnectStep?
 
+    private static let dotSize: CGFloat = 30 // 26 * 1.15, rounded
+    private static let lineThickness: CGFloat = 3
+
     var body: some View {
+        // Dots and connectors sized only by the dot (not the wider label below),
+        // so the line touches each dot's edge exactly with no gap. Labels are
+        // overlaid underneath instead of sharing this row's width.
         HStack(alignment: .top, spacing: 0) {
-            // (Steps have a fixed width; only the connector lines between them
-            // stretch to fill the card - see RelaySequenceTimeline's frame below.)
             ForEach(ConnectStep.allCases, id: \.self) { step in
                 let status = Self.status(for: step, currentStep: currentStep)
-                HStack(alignment: .top, spacing: 0) {
-                    VStack(spacing: 8) {
-                        StepDot(status: status)
+                StepDot(status: status, size: Self.dotSize)
+                    .overlay(alignment: .top) {
                         Text(step.label)
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundStyle(status == .pending ? Tokens.mutedForeground : Tokens.foreground)
                             .multilineTextAlignment(.center)
-                            .frame(width: 84)
+                            .frame(width: 100)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .offset(y: Self.dotSize + 8)
                     }
-                    if step != ConnectStep.allCases.last {
-                        Rectangle()
-                            .fill(status == .done ? Tokens.primary : Tokens.border)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 2)
-                            .padding(.top, 13)
-                    }
+                if step != ConnectStep.allCases.last {
+                    Rectangle()
+                        .fill(status == .done ? Tokens.primary : Tokens.border)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: Self.lineThickness)
+                        .padding(.top, (Self.dotSize - Self.lineThickness) / 2)
                 }
             }
         }
         .frame(maxWidth: .infinity)
+        .padding(.bottom, 36) // room for the overlaid labels below the dot row
     }
 
     private static func status(for step: ConnectStep, currentStep: ConnectStep?) -> StepStatus {
@@ -52,6 +57,7 @@ private enum StepStatus {
 
 private struct StepDot: View {
     let status: StepStatus
+    let size: CGFloat
 
     var body: some View {
         ZStack {
@@ -59,11 +65,11 @@ private struct StepDot: View {
             case .done:
                 Circle().fill(Tokens.primary)
                 Image(systemName: "checkmark")
-                    .font(.system(size: 11, weight: .bold))
+                    .font(.system(size: size * 0.42, weight: .bold))
                     .foregroundStyle(.white)
             case .current:
                 Circle().strokeBorder(Tokens.primary, lineWidth: 2)
-                Circle().fill(Tokens.primary).frame(width: 10, height: 10)
+                Circle().fill(Tokens.primary).frame(width: size * 0.38, height: size * 0.38)
                     .scaleEffect(pulse ? 1.15 : 0.85)
                     .opacity(pulse ? 1 : 0.6)
                     .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: pulse)
@@ -72,7 +78,7 @@ private struct StepDot: View {
                 Circle().strokeBorder(Tokens.border, lineWidth: 2)
             }
         }
-        .frame(width: 26, height: 26)
+        .frame(width: size, height: size)
     }
 
     @State private var pulse = false
