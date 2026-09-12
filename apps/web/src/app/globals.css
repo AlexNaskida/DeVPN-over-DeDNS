@@ -111,3 +111,20 @@ button {
   background: var(--muted);
   border-radius: 4px;
 }
+
+/* RelaySequenceTimeline.tsx's "in progress" step dot. */
+@keyframes stepPulse {
+  0%,
+  100% {
+    transform: scale(0.85);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+.dvod-step-pulse {
+  animation: stepPulse 1.2s ease-in-out infinite;
+}

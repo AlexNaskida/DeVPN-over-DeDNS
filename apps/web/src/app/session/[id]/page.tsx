@@ -4,25 +4,25 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   getSessionDetail,
-  forceRelayFailure,
   endSession,
   macOsConnectUrl,
   type SessionDetail,
   type SessionEvent,
 } from "@/lib/api";
 import { useSessionStream } from "@/lib/useSessionStream";
-import { StateBadge, STATE_COLOR } from "@/components/StateBadge";
+import { StateBadge } from "@/components/StateBadge";
 import { VisibilityPanel } from "@/components/VisibilityPanel";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { RelaySequenceTimeline } from "@/components/RelaySequenceTimeline";
 
 const TERMINAL_STATES = new Set(["EXPIRED_NORMAL", "RELAY_REVOKED", "SESSION_COMPLETE"]);
+const READY_STATES = new Set(["ACTIVE", "RELAY_UNREACHABLE", "FAILOVER_SELECT"]);
 
 export default function SessionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [detail, setDetail] = useState<SessionDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [failoverBusy, setFailoverBusy] = useState(false);
   const [endBusy, setEndBusy] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const liveEvents = useSessionStream(id);
@@ -41,6 +41,8 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
   const currentState = allEvents.at(-1)?.toState ?? detail?.state ?? "unknown";
   const currentRelay = [...allEvents].reverse().find((e) => e.relay)?.relay ?? detail?.relay;
   const currentTier = [...allEvents].reverse().find((e) => e.tier)?.tier;
+  const isTerminal = TERMINAL_STATES.has(currentState);
+  const isReady = READY_STATES.has(currentState);
 
   // Read after mount, not during render - sessionStorage doesn't exist during SSR,
   // and reading it inline would mismatch the server-rendered HTML.
@@ -48,18 +50,6 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
   useEffect(() => {
     setSessionToken(sessionStorage.getItem(`dvod-session-token-${id}`));
   }, [id]);
-
-  async function handleForceFailure() {
-    setFailoverBusy(true);
-    setError(null);
-    try {
-      await forceRelayFailure(id);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setFailoverBusy(false);
-    }
-  }
 
   async function handleEndSession() {
     setEndBusy(true);
@@ -92,7 +82,7 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
   }
 
   return (
-    <div>
+    <div style={{ maxWidth: 640, margin: "0 auto" }}>
       <BackLink />
 
       <div
@@ -101,7 +91,7 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
           border: "1px solid var(--border)",
           borderRadius: "var(--radius)",
           padding: "26px 28px",
-          marginBottom: 32,
+          marginBottom: 24,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -135,25 +125,8 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <CountdownTimer expiresAt={detail.expiresAt} ended={TERMINAL_STATES.has(currentState)} />
+          <CountdownTimer expiresAt={detail.expiresAt} ended={isTerminal} />
           <StateBadge state={currentState} />
-          {currentState === "ACTIVE" && sessionToken && (
-            <a
-              href={macOsConnectUrl(sessionToken)}
-              title="Opens the DVoD macOS app - see docs/SECURITY.md for what this actually connects to today."
-              style={{
-                background: "var(--primary)",
-                color: "var(--primary-foreground)",
-                textDecoration: "none",
-                padding: "8px 14px",
-                borderRadius: "var(--radius)",
-                fontSize: 12.5,
-                fontWeight: 600,
-              }}
-            >
-              Connect via macOS app
-            </a>
-          )}
           {currentState === "ACTIVE" && (
             <button
               onClick={() => setShowEndConfirm(true)}
@@ -185,98 +158,52 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
         />
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 32 }}>
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16 }}>
-            <h2
+      <div
+        style={{
+          background: "var(--card)",
+          border: "1px solid var(--border)",
+          borderRadius: "var(--radius)",
+          padding: "24px 28px",
+          marginBottom: 24,
+        }}
+      >
+        <RelaySequenceTimeline currentState={currentState} />
+
+        {isTerminal ? (
+          <p style={{ marginTop: 22, marginBottom: 0, fontSize: 13, color: "var(--muted-foreground)" }}>
+            This session has ended.
+          </p>
+        ) : isReady && sessionToken ? (
+          <div style={{ marginTop: 24, textAlign: "center" }}>
+            <p style={{ margin: "0 0 14px", fontSize: 14, color: "var(--muted-foreground)" }}>
+              Your session is ready - everything from here happens in the app.
+            </p>
+            <a
+              href={macOsConnectUrl(sessionToken)}
+              title="Opens the DVoD macOS app - see docs/SECURITY.md for what this actually connects to today."
               style={{
-                fontSize: 13,
-                textTransform: "uppercase",
-                letterSpacing: 1,
-                color: "var(--muted-foreground)",
-                margin: 0,
-              }}
-            >
-              Live event log
-            </h2>
-            <button
-              onClick={handleForceFailure}
-              disabled={failoverBusy || currentState !== "ACTIVE"}
-              title="Demo control per brief §9.3 - a real deployment triggers this from the watchdog contract or a connectivity check, not a button anyone can click."
-              style={{
-                background: "transparent",
-                color: "var(--destructive)",
-                border: "1px solid var(--destructive)",
-                padding: "6px 14px",
+                display: "inline-block",
+                background: "var(--primary)",
+                color: "var(--primary-foreground)",
+                textDecoration: "none",
+                padding: "12px 24px",
                 borderRadius: "var(--radius)",
-                cursor: currentState === "ACTIVE" ? "pointer" : "not-allowed",
-                opacity: currentState === "ACTIVE" ? 1 : 0.4,
-                fontSize: 12,
-                fontWeight: 600,
+                fontSize: 14,
+                fontWeight: 700,
               }}
             >
-              {failoverBusy ? "Forcing failover..." : "Force relay failure (demo)"}
-            </button>
+              Open the DVoD app
+            </a>
           </div>
-
-          <EventTimeline events={allEvents} />
-          {error && <p style={{ color: "var(--destructive)", marginTop: 12, fontSize: 13 }}>{error}</p>}
-        </div>
-
-        <VisibilityPanel />
+        ) : (
+          <p style={{ marginTop: 22, marginBottom: 0, fontSize: 13, color: "var(--muted-foreground)" }}>
+            Setting up your session...
+          </p>
+        )}
+        {error && <p style={{ color: "var(--destructive)", marginTop: 16, fontSize: 13 }}>{error}</p>}
       </div>
-    </div>
-  );
-}
 
-function EventTimeline({ events }: { events: SessionEvent[] }) {
-  return (
-    <div style={{ position: "relative", paddingLeft: 22 }}>
-      <div style={{ position: "absolute", left: 5, top: 6, bottom: 6, width: 1, background: "var(--border)" }} />
-      <div style={{ display: "grid", gap: 4 }}>
-        {events.map((ev, i) => {
-          const color = STATE_COLOR[ev.toState] ?? "var(--muted-foreground)";
-          const isLast = i === events.length - 1;
-          return (
-            <div key={ev.id} style={{ position: "relative", paddingBottom: 16 }}>
-              <span
-                style={{
-                  position: "absolute",
-                  left: -22,
-                  top: 5,
-                  width: 10,
-                  height: 10,
-                  borderRadius: "50%",
-                  background: isLast ? color : "var(--card)",
-                  border: `2px solid ${color}`,
-                }}
-              />
-              <div
-                style={{
-                  fontSize: 13,
-                  padding: "10px 14px",
-                  borderRadius: "var(--radius)",
-                  border: "1px solid var(--border)",
-                  background: "var(--card)",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span>
-                    {ev.fromState ?? "start"} <span style={{ color: "var(--muted-foreground)" }}>→</span>{" "}
-                    <strong style={{ color }}>{ev.toState}</strong>
-                  </span>
-                  <span style={{ color: "var(--muted-foreground)", fontVariantNumeric: "tabular-nums" }}>
-                    {new Date(ev.createdAt).toLocaleTimeString()}
-                  </span>
-                </div>
-                {ev.detail && (
-                  <div style={{ color: "var(--muted-foreground)", marginTop: 4 }}>{ev.detail}</div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <VisibilityPanel />
     </div>
   );
 }
