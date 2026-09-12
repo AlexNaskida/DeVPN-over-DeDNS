@@ -130,7 +130,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         disconnect() // clean up any prior session first
 
         let payload = SessionTokenPayload.decode(request.token)
+        state.connectStep = .verifying
 
+        state.connectStep = .relay
         do {
             let server = try LocalProxyServer(
                 localPort: localPort,
@@ -143,16 +145,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             proxyServer = server
         } catch {
             NSLog("[DVoD] failed to start local proxy: %@", error.localizedDescription)
+            state.connectStep = nil
             return
         }
 
+        state.connectStep = .proxy
         guard let service = SystemProxy.activeServiceName() else {
             NSLog("[DVoD] no active network service found")
+            state.connectStep = nil
             return
         }
         activeNetworkService = service
         SystemProxy.enable(service: service, host: "127.0.0.1", port: Int(localPort))
 
+        state.connectStep = .connected
         state.payload = payload
         state.connected = true
         state.now = Date()
@@ -181,6 +187,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         state.connected = false
         state.payload = nil
         state.connectedSince = nil
+        state.connectStep = nil
         if let id = historyEntryId {
             historyStore.recordDisconnect(id: id)
             historyEntryId = nil

@@ -59,6 +59,11 @@ struct DashboardView: View {
 
             Divider()
 
+            RelaySequenceTimeline(currentStep: state.connectStep)
+                .padding(.vertical, 4)
+
+            Divider()
+
             VStack(alignment: .leading, spacing: 12) {
                 InfoRow(label: "Relay", value: payload.relay)
                 InfoRow(label: "Tier", value: payload.tier.capitalized)
