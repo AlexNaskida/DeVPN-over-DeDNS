@@ -8,15 +8,34 @@ struct DashboardView: View {
     var onDisconnect: () -> Void
 
     var body: some View {
-        ZStack {
-            if state.connected, let payload = state.payload {
-                connectedCard(payload)
-            } else {
-                idleHero
+        VStack(spacing: 0) {
+            ZStack {
+                if state.connected, let payload = state.payload {
+                    connectedCard(payload)
+                } else {
+                    idleHero
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            if state.connectStep != nil {
+                statusBar
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Tokens.background)
+    }
+
+    /// Full width of the detail pane, not squeezed into the card - there was a
+    /// lot of unused space below the (much narrower) card at this window size,
+    /// and the sequence reads better spread across it.
+    private var statusBar: some View {
+        VStack(spacing: 0) {
+            Divider()
+            RelaySequenceTimeline(currentStep: state.connectStep)
+                .padding(.horizontal, 48)
+                .padding(.vertical, 22)
+        }
+        .background(Tokens.card)
     }
 
     private var idleHero: some View {
@@ -56,11 +75,6 @@ struct DashboardView: View {
                     .foregroundStyle(Tokens.accent) // accent reserved for exactly this: live-session-countdown
             }
             .padding(.vertical, 4)
-
-            Divider()
-
-            RelaySequenceTimeline(currentStep: state.connectStep)
-                .padding(.vertical, 4)
 
             Divider()
 
