@@ -32,10 +32,11 @@ struct DashboardView: View {
         VStack(spacing: 0) {
             Divider()
             RelaySequenceTimeline(currentStep: state.connectStep)
-                .padding(.horizontal, 48)
                 .padding(.vertical, 22)
         }
-        .background(Tokens.card)
+        // No fill - this reads as part of the same surface as the rest of the
+        // dashboard, not a separate card; Tokens.background already covers it
+        // via DashboardView's own background below.
     }
 
     private var idleHero: some View {
