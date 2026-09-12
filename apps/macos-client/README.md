@@ -20,11 +20,23 @@ This does.
    server's `CONNECT` handler requires - solving a real problem: macOS's system
    proxy settings can't inject custom headers, only standard
    `Proxy-Authorization`, so the OS can't point directly at the remote relay.
-5. Clicking the menu bar icon opens a real SwiftUI dashboard (`DashboardView.swift`,
-   `AppState.swift` - a proper `ObservableObject`, not just a status-item title
-   string) showing connection state, relay name, tier, and a live countdown decoded
-   from the token's own `expiresAt`, with a "Disconnect" button that stops the local
-   relay and reverts the system proxy setting.
+5. Clicking the menu bar icon's "Open app" item opens a real SwiftUI app window
+   (`AppRootView.swift`) with a sidebar (`SidebarView.swift`) and four sections:
+   - **Dashboard** (`DashboardView.swift`, `AppState.swift` - a proper
+     `ObservableObject`, not just a status-item title string): a spinning
+     SceneKit 3D hero (`Hero3DView.swift`, a real `SCNView`/`SCNScene`, not an
+     image) while idle, and the live session card (relay, tier, purchased
+     duration, connected-since time, session ID, a live countdown decoded from
+     the token's own `expiresAt`) plus "Disconnect" once connected.
+   - **Purchase**: tier pricing mirrored from `packages/session-spec/src/tier.ts`.
+     UI only - see "Honest scope" below for why buying still happens in the
+     web app.
+   - **History** (`ConnectionHistoryStore.swift`): a real local log of this
+     machine's connect/disconnect events, persisted as JSON under
+     `~/Library/Application Support/DVoD/` - not sample data.
+   - **Become a Relay**: an explanatory placeholder; registering as a relay is a
+     separate, long-lived server role this client doesn't implement.
+   A "Connect Wallet" button sits at the bottom of the sidebar.
 6. Ships a real app icon (`Resources/DVoD.icns`, generated from the actual brand
    logo) and can be installed into `/Applications` so it's Spotlight-searchable like
    any other app, not just a loose bundle you have to `open` by path.
@@ -38,6 +50,17 @@ proving this app doesn't bypass that.
 
 ## Honest scope - read this before assuming more than what's here
 
+- **"Connect Wallet" and "Purchase" don't do any signing.** A native Swift app
+  has no access to a browser wallet extension (MetaMask), and MetaMask itself
+  only supports `eth_sendTransaction` (atomic send), not `eth_signTransaction` -
+  see the root `README.md`'s x402 section for the full explanation of why
+  building around that isn't currently viable either. Both buttons just open
+  the web app (`WalletState.swift`, `DVoDWebURL` in `Info.plist`, defaulting to
+  `http://localhost:3000`), where wallet connection and payment actually
+  happen today. They're present in the UI so the shape of in-app purchasing is
+  visible, without pretending a native payment flow exists.
+- **"Become a Relay" is a placeholder screen**, not a working relay-registration
+  flow - see `RelayView.swift`.
 - **This is a system HTTP/HTTPS proxy, not a full VPN.** A real `NetworkExtension`/
   `NEVPNManager` tunnel (capturing *all* traffic, all protocols) requires Apple's
   Network Extension entitlement, which needs a formal request and approval from
