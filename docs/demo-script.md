@@ -45,7 +45,7 @@ Point out, in order:
 
 ## 4. The centerpiece: forced failover (45s)
 
-Click **"Force relay failure (demo)"**. Narrate while it happens:
+Click **"Force relay failure"**. Narrate while it happens:
 
 > This simulates the relay going unreachable mid-session. Watch the dashboard -
 > nothing reloads.
