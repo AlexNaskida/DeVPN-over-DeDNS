@@ -21,7 +21,7 @@ struct RelaySequenceTimeline: View {
         // the row so the line reaches the container's border on both ends, not
         // just the first/last dot.
         HStack(alignment: .top, spacing: 0) {
-            connectorSegment(color: firstStepColor)
+            edgeSegment(color: firstStepColor)
 
             ForEach(ConnectStep.allCases, id: \.self) { step in
                 let status = Self.status(for: step, currentStep: currentStep)
@@ -36,20 +36,29 @@ struct RelaySequenceTimeline: View {
                             .offset(y: Self.dotSize + 8)
                     }
                 if step != ConnectStep.allCases.last {
-                    connectorSegment(color: status == .done ? Tokens.primary : Tokens.border)
+                    // Flexible - these fill the space between dots, spreading
+                    // the whole sequence across the container's full width.
+                    connectorLine(color: status == .done ? Tokens.primary : Tokens.border)
+                        .frame(maxWidth: .infinity)
                 }
             }
 
-            connectorSegment(color: lastStepColor)
+            edgeSegment(color: lastStepColor)
         }
         .frame(maxWidth: .infinity)
         .padding(.bottom, 36) // room for the overlaid labels below the dot row
     }
 
-    private func connectorSegment(color: Color) -> some View {
+    /// A short, fixed-width segment - just enough to visibly reach this view's
+    /// own left/right edge, not something that should compete for the flexible
+    /// space the between-dot connectors need.
+    private func edgeSegment(color: Color) -> some View {
+        connectorLine(color: color).frame(width: 40)
+    }
+
+    private func connectorLine(color: Color) -> some View {
         Rectangle()
             .fill(color)
-            .frame(width: 40) // reaches this view's own edge - no outer padding wraps it
             .frame(height: Self.lineThickness)
             .padding(.top, (Self.dotSize - Self.lineThickness) / 2)
     }
