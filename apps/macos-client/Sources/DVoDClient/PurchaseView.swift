@@ -21,25 +21,29 @@ struct PurchaseView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                HStack(alignment: .top, spacing: 20) {
+                HStack(alignment: .top, spacing: 28) {
                     ForEach(Tier.allCases) { tier in
                         tierCard(tier)
                     }
                 }
-                // Room for the selected card's 10% scale-up so it doesn't clip
-                // against neighboring content.
+                // Room for the selected card growing taller so it doesn't clip
+                // against the content above/below.
                 .padding(.vertical, 14)
 
                 hoursControl
 
-                Button(action: WalletState.openWebApp) {
-                    Text(selectedTier == nil ? "Select a plan" : "Buy in Web App")
-                        .frame(maxWidth: .infinity)
+                HStack {
+                    Spacer()
+                    Button(action: WalletState.openWebApp) {
+                        Text(selectedTier == nil ? "Select a plan" : "Buy in Web App")
+                            .padding(.horizontal, 6)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .tint(Tokens.primary)
+                    .disabled(selectedTier == nil)
+                    Spacer()
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .tint(Tokens.primary)
-                .disabled(selectedTier == nil)
             }
             .padding(28)
         }
@@ -47,19 +51,27 @@ struct PurchaseView: View {
 
     private func tierCard(_ tier: Tier) -> some View {
         let isSelected = selectedTier == tier
+        // Grows ~10% via layout (padding/height/font), not a scaleEffect
+        // transform - scaleEffect ignores layout and grew straight into the
+        // neighboring card instead of making room for itself.
+        let cardPadding: CGFloat = isSelected ? 20 : 18
+        let minHeight: CGFloat = isSelected ? 121 : 110
+        let titleSize: CGFloat = isSelected ? 17.5 : 16
+        let priceSize: CGFloat = isSelected ? 20 : 18
+
         return VStack(alignment: .leading, spacing: 10) {
             Text(tier.displayName)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.system(size: titleSize, weight: .semibold))
             Text(tier.summary)
                 .font(.system(size: 12))
                 .foregroundStyle(Tokens.mutedForeground)
             Spacer(minLength: 12)
             Text("$\(String(format: "%.2f", tier.pricePerHourUsdc))/hr")
-                .font(.system(size: 18, weight: .bold, design: .monospaced))
+                .font(.system(size: priceSize, weight: .bold, design: .monospaced))
                 .foregroundStyle(isSelected ? Tokens.primary : Tokens.foreground)
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, minHeight: 110, alignment: .topLeading)
+        .padding(cardPadding)
+        .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .topLeading)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(Tokens.card)
@@ -68,7 +80,6 @@ struct PurchaseView: View {
                         .strokeBorder(isSelected ? Tokens.primary : Tokens.border, lineWidth: isSelected ? 2 : 1),
                 ),
         )
-        .scaleEffect(isSelected ? 1.1 : 1)
         .animation(.spring(response: 0.25, dampingFraction: 0.7), value: isSelected)
         .contentShape(RoundedRectangle(cornerRadius: 12))
         .onTapGesture {
