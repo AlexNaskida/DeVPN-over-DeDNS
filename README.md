@@ -57,7 +57,7 @@ that doesn't fit a hackathon timeline).
 Phases 0-5 are complete and the full stack is deployed live (not just runnable
 locally) - see [Live deployment](#live-deployment) and the [build phases](#build-phases)
 below. Phase 5's docs are real, not placeholders: `docs/SECURITY.md` (honest scope/
-threat model), `docs/PRICING.md`, `docs/demo-script.md`, and `docs/load-test.md` (a
+threat model), `docs/PRICING.md`, and `docs/load-test.md` (a
 real load test that found and fixed a genuine bug - an uncached RPC call that
 exhausted a public RPC's rate limit under trivial concurrency).
 
@@ -137,8 +137,6 @@ for the current honest scope.
 - `docs/PRICING.md` - the real rate card (`packages/session-spec/src/tier.ts`,
   mirrored exactly in the orchestrator and the contract) and where payment actually
   goes.
-- `docs/demo-script.md` - a ~5 minute walkthrough script, written to end on the
-  honest limitation rather than hide it.
 - `docs/load-test.md` - a real `autocannon` run against `GET /tiers` found a genuine
   bug: every request re-read every operator's ENSv2 record from Sepolia live, with no
   caching, which exhausted the public RPC's rate limit at just 20 concurrent
