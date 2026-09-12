@@ -7,7 +7,9 @@ import SwiftUI
 /// native payment flow exists yet.
 struct PurchaseView: View {
     @State private var selectedTier: Tier?
-    @State private var hours: Double = 1
+    @State private var hours: Int = 1
+
+    private let hourRange = 1...24
 
     var body: some View {
         ScrollView {
@@ -88,24 +90,38 @@ struct PurchaseView: View {
     }
 
     private var hoursControl: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Session duration")
-                    .font(.system(size: 13, weight: .semibold))
-                Spacer()
-                Text("\(Int(hours))h")
-                    .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(Tokens.primary)
+        VStack(spacing: 16) {
+            Text("Session duration")
+                .font(.system(size: 13, weight: .semibold))
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack(spacing: 28) {
+                stepperButton(systemName: "minus") { hours = max(hourRange.lowerBound, hours - 1) }
+                    .disabled(hours <= hourRange.lowerBound)
+
+                VStack(spacing: 2) {
+                    Text("\(hours)")
+                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(Tokens.primary)
+                    Text(hours == 1 ? "hour" : "hours")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Tokens.mutedForeground)
+                }
+                .frame(width: 100)
+
+                stepperButton(systemName: "plus") { hours = min(hourRange.upperBound, hours + 1) }
+                    .disabled(hours >= hourRange.upperBound)
             }
-            Slider(value: $hours, in: 1...24, step: 1)
-                .tint(Tokens.primary)
+
             if let selectedTier {
-                Text("Total: $\(String(format: "%.2f", selectedTier.pricePerHourUsdc * hours)) for \(Int(hours))h")
+                Text("Total: $\(String(format: "%.2f", selectedTier.pricePerHourUsdc * Double(hours))) for \(hours)h")
                     .font(.system(size: 12))
                     .foregroundStyle(Tokens.mutedForeground)
             }
         }
-        .padding(18)
+        .padding(20)
+        .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(Tokens.card)
@@ -114,5 +130,16 @@ struct PurchaseView: View {
                         .strokeBorder(Tokens.border, lineWidth: 1),
                 ),
         )
+    }
+
+    private func stepperButton(systemName: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(Tokens.foreground)
+                .frame(width: 36, height: 36)
+                .background(Circle().fill(Tokens.muted))
+        }
+        .buttonStyle(.plain)
     }
 }
