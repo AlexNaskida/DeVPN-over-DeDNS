@@ -3,44 +3,46 @@ import Combine
 import SwiftUI
 
 /// A real, titled app window hosting DashboardView - not a popover anchored to the
-/// status item. Opened explicitly via the menu-bar extension's "Open app" button.
+/// status item. Opened via the menu bar's "Open app" item.
 ///
-/// Sized dynamically: 80% of the screen while actually connected (there's real
-/// content worth the space - relay, tier, live countdown), a small compact size
-/// otherwise (a huge, mostly-empty window for "not connected, go buy a session"
-/// just looks broken).
+/// Sized dynamically: roomy while actually connected (there's real content worth
+/// the space), a small compact size otherwise. Deliberately uses AppKit's own
+/// `center()` rather than computing an origin from screen geometry ourselves - the
+/// menu-bar popover bug turned out to be exactly that kind of custom positioning
+/// math going wrong on an unusual display setup, so this avoids the same mistake:
+/// fixed, sane sizes, AppKit does the centering.
 final class DashboardWindowController: NSWindowController {
     private static let idleSize = NSSize(width: 480, height: 420)
+    private static let connectedSize = NSSize(width: 900, height: 700)
     private var cancellable: AnyCancellable?
 
     convenience init(state: AppState, onDisconnect: @escaping () -> Void, onQuit: @escaping () -> Void) {
         let hosting = NSHostingController(
             rootView: DashboardView(state: state, onDisconnect: onDisconnect, onQuit: onQuit),
         )
+        // Without this, NSHostingController resizes the window to SwiftUI's own
+        // "ideal" content size on every layout pass - and DashboardView's Spacer()s
+        // inside a maxWidth/maxHeight: .infinity frame report a huge, effectively
+        // unbounded ideal height, which is what produced the tall/portrait window
+        // bug (height ballooning to 1000+pt regardless of setContentSize below).
+        // Turning this off makes setContentSize the single source of truth.
+        hosting.sizingOptions = []
         let window = NSWindow(contentViewController: hosting)
         window.title = "DVoD"
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
         window.isReleasedWhenClosed = false // closing hides it, doesn't destroy the controller
         self.init(window: window)
 
-        resize(connected: state.connected, animate: false)
+        resize(connected: state.connected)
         cancellable = state.$connected
             .removeDuplicates()
-            .sink { [weak self] connected in self?.resize(connected: connected, animate: true) }
+            .sink { [weak self] connected in self?.resize(connected: connected) }
     }
 
-    private func resize(connected: Bool, animate: Bool) {
-        guard let window, let screen = window.screen ?? NSScreen.main else { return }
-        let visible = screen.visibleFrame
-
-        let size: NSSize = connected
-            ? NSSize(width: visible.width * 0.8, height: visible.height * 0.8)
-            : Self.idleSize
-        let origin = NSPoint(
-            x: visible.minX + (visible.width - size.width) / 2,
-            y: visible.minY + (visible.height - size.height) / 2,
-        )
-        window.setFrame(NSRect(origin: origin, size: size), display: true, animate: animate)
+    private func resize(connected: Bool) {
+        guard let window else { return }
+        window.setContentSize(connected ? Self.connectedSize : Self.idleSize)
+        window.center()
     }
 
     func showAndFocus() {

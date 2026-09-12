@@ -1,9 +1,8 @@
 import SwiftUI
 
-/// The full app window's content (DashboardWindowController - 80% of the screen
-/// while connected, a small compact size while idle). Opened via the menu-bar
-/// extension's "Open app" button. The compact day-to-day UI is ExtensionView, not
-/// this.
+/// The full app window's content (DashboardWindowController - a roomy fixed size
+/// while connected, a small compact size while idle). Opened via the menu bar's
+/// "Open app" item.
 struct DashboardView: View {
     @ObservedObject var state: AppState
     var onDisconnect: () -> Void
@@ -20,7 +19,7 @@ struct DashboardView: View {
             }
 
             HStack {
-                Text("Demo Session - see apps/macos-client/README.md for scope")
+                Text("Session - see apps/macos-client/README.md for scope")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                 Spacer()
