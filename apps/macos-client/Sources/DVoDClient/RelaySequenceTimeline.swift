@@ -16,8 +16,13 @@ struct RelaySequenceTimeline: View {
     var body: some View {
         // Dots and connectors sized only by the dot (not the wider label below),
         // so the line touches each dot's edge exactly with no gap. Labels are
-        // overlaid underneath instead of sharing this row's width.
+        // overlaid underneath instead of sharing this row's width. A leading and
+        // trailing segment (touching this view's own left/right edges) bookend
+        // the row so the line reaches the container's border on both ends, not
+        // just the first/last dot.
         HStack(alignment: .top, spacing: 0) {
+            connectorSegment(color: firstStepColor)
+
             ForEach(ConnectStep.allCases, id: \.self) { step in
                 let status = Self.status(for: step, currentStep: currentStep)
                 StepDot(status: status, size: Self.dotSize)
@@ -31,16 +36,30 @@ struct RelaySequenceTimeline: View {
                             .offset(y: Self.dotSize + 8)
                     }
                 if step != ConnectStep.allCases.last {
-                    Rectangle()
-                        .fill(status == .done ? Tokens.primary : Tokens.border)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: Self.lineThickness)
-                        .padding(.top, (Self.dotSize - Self.lineThickness) / 2)
+                    connectorSegment(color: status == .done ? Tokens.primary : Tokens.border)
                 }
             }
+
+            connectorSegment(color: lastStepColor)
         }
         .frame(maxWidth: .infinity)
         .padding(.bottom, 36) // room for the overlaid labels below the dot row
+    }
+
+    private func connectorSegment(color: Color) -> some View {
+        Rectangle()
+            .fill(color)
+            .frame(width: 40) // reaches this view's own edge - no outer padding wraps it
+            .frame(height: Self.lineThickness)
+            .padding(.top, (Self.dotSize - Self.lineThickness) / 2)
+    }
+
+    private var firstStepColor: Color {
+        Self.status(for: .verifying, currentStep: currentStep) == .pending ? Tokens.border : Tokens.primary
+    }
+
+    private var lastStepColor: Color {
+        Self.status(for: .connected, currentStep: currentStep) == .done ? Tokens.primary : Tokens.border
     }
 
     private static func status(for step: ConnectStep, currentStep: ConnectStep?) -> StepStatus {
