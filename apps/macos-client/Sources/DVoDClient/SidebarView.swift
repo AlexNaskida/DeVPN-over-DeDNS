@@ -40,11 +40,11 @@ struct SidebarView: View {
             }
             .buttonStyle(.plain)
             .font(.system(size: 13, weight: .medium))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Tokens.mutedForeground)
             .padding(14)
         }
         .frame(width: 200)
-        .background(Color(red: 0.055, green: 0.07, blue: 0.09))
+        .background(Tokens.card)
     }
 
     private func sidebarRow(_ section: SidebarSection) -> some View {
@@ -61,8 +61,8 @@ struct SidebarView: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
-            .background(selected ? Color.orange.opacity(0.18) : Color.clear)
-            .foregroundStyle(selected ? Color.orange : Color.primary.opacity(0.85))
+            .background(selected ? Tokens.primary.opacity(0.18) : Color.clear)
+            .foregroundStyle(selected ? Tokens.primary : Tokens.foreground.opacity(0.85))
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .contentShape(Rectangle())
         }

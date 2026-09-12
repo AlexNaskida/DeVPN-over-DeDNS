@@ -16,7 +16,7 @@ struct DashboardView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(red: 0.04, green: 0.055, blue: 0.07))
+        .background(Tokens.background)
     }
 
     private var idleHero: some View {
@@ -29,7 +29,7 @@ struct DashboardView: View {
                     .font(.system(size: 20, weight: .semibold))
                 Text("Buy a session in the web app, then click \"Connect via macOS app\" on the session dashboard.")
                     .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Tokens.mutedForeground)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: 320)
             }
@@ -48,12 +48,12 @@ struct DashboardView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("TIME REMAINING")
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Tokens.mutedForeground)
                     .tracking(0.5)
                 Text(formatDuration(state.remainingSeconds))
                     .font(.system(size: 48, weight: .bold, design: .rounded))
                     .monospacedDigit()
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Tokens.accent) // accent reserved for exactly this: live-session-countdown
             }
             .padding(.vertical, 4)
 
@@ -73,16 +73,16 @@ struct DashboardView: View {
             Button("Disconnect", action: onDisconnect)
                 .buttonStyle(.bordered)
                 .controlSize(.large)
-                .tint(.red)
+                .tint(Tokens.destructive)
         }
         .padding(28)
         .frame(maxWidth: 460)
         .background(
             RoundedRectangle(cornerRadius: 14)
-                .fill(Color(red: 0.07, green: 0.09, blue: 0.11))
+                .fill(Tokens.card)
                 .overlay(
                     RoundedRectangle(cornerRadius: 14)
-                        .strokeBorder(Color.white.opacity(0.08), lineWidth: 1),
+                        .strokeBorder(Tokens.border, lineWidth: 1),
                 ),
         )
     }
@@ -100,8 +100,8 @@ struct StatusPill: View {
             .font(.system(size: 12, weight: .semibold))
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
-            .background(connected ? Color.green.opacity(0.18) : Color.gray.opacity(0.18))
-            .foregroundStyle(connected ? Color.green : Color.gray)
+            .background(connected ? Tokens.primary.opacity(0.18) : Tokens.muted)
+            .foregroundStyle(connected ? Tokens.primary : Tokens.mutedForeground)
             .clipShape(Capsule())
     }
 }
@@ -114,7 +114,7 @@ struct InfoRow: View {
         HStack {
             Text(label)
                 .font(.system(size: 13))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Tokens.mutedForeground)
             Spacer()
             Text(value)
                 .font(.system(size: 13, design: .monospaced))
