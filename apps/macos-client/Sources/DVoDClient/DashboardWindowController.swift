@@ -46,7 +46,16 @@ final class DashboardWindowController: NSWindowController {
 
     private func resize(connected: Bool) {
         guard let window else { return }
-        window.setContentSize(connected ? Self.connectedSize : Self.idleSize)
+        let desired = connected ? Self.connectedSize : Self.idleSize
+        // Same fixed size on every normal display - just clamped (never scaled up
+        // or repositioned via percentage math, which is what broke this window
+        // before) so it still fits whole on a smaller screen.
+        let available = (window.screen ?? NSScreen.main)?.visibleFrame.size ?? desired
+        let clamped = NSSize(
+            width: min(desired.width, available.width - 40),
+            height: min(desired.height, available.height - 40),
+        )
+        window.setContentSize(clamped)
         window.center()
     }
 

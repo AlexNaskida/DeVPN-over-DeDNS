@@ -14,7 +14,7 @@ struct PurchaseView: View {
                         .font(.system(size: 22, weight: .bold))
                     Text("Pricing mirrors packages/session-spec. Buying still happens in the web app for now - it needs a browser wallet (MetaMask) to sign the on-chain payment, which this native app can't access directly.")
                         .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Tokens.mutedForeground)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -33,22 +33,22 @@ struct PurchaseView: View {
                     .font(.system(size: 16, weight: .semibold))
                 Text(tier.summary)
                     .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Tokens.mutedForeground)
             }
             Spacer()
             Text("$\(String(format: "%.2f", tier.pricePerHourUsdc))/hr")
                 .font(.system(size: 14, weight: .medium, design: .monospaced))
             Button("Buy in Web App", action: WalletState.openWebApp)
                 .buttonStyle(.borderedProminent)
-                .tint(.orange)
+                .tint(Tokens.primary)
         }
         .padding(18)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(red: 0.07, green: 0.09, blue: 0.11))
+                .fill(Tokens.card)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
-                        .strokeBorder(Color.white.opacity(0.08), lineWidth: 1),
+                        .strokeBorder(Tokens.border, lineWidth: 1),
                 ),
         )
     }
