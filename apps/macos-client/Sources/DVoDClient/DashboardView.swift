@@ -27,16 +27,12 @@ struct DashboardView: View {
 
     /// Full width of the detail pane, not squeezed into the card - there was a
     /// lot of unused space below the (much narrower) card at this window size,
-    /// and the sequence reads better spread across it.
+    /// and the sequence reads better spread across it. No border or fill of its
+    /// own - reads as part of the same surface as the rest of the dashboard
+    /// (Tokens.background, from DashboardView's own background below).
     private var statusBar: some View {
-        VStack(spacing: 0) {
-            Divider()
-            RelaySequenceTimeline(currentStep: state.connectStep)
-                .padding(.vertical, 22)
-        }
-        // No fill - this reads as part of the same surface as the rest of the
-        // dashboard, not a separate card; Tokens.background already covers it
-        // via DashboardView's own background below.
+        RelaySequenceTimeline(currentStep: state.connectStep)
+            .padding(.vertical, 22)
     }
 
     private var idleHero: some View {
