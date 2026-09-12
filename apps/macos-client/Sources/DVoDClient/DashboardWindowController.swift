@@ -11,7 +11,7 @@ import SwiftUI
 /// popover bug turned out to be exactly that kind of custom positioning math
 /// going wrong on an unusual display setup, so this avoids the same mistake.
 final class DashboardWindowController: NSWindowController {
-    private static let defaultSize = NSSize(width: 760, height: 560)
+    private static let defaultSize = NSSize(width: 1600, height: 900)
 
     convenience init(
         state: AppState,
