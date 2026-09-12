@@ -140,7 +140,7 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
           {currentState === "ACTIVE" && sessionToken && (
             <a
               href={macOsConnectUrl(sessionToken)}
-              title="Opens the DVoD macOS app (Demo Session) - see docs/SECURITY.md for what this actually connects to today."
+              title="Opens the DVoD macOS app - see docs/SECURITY.md for what this actually connects to today."
               style={{
                 background: "var(--primary)",
                 color: "var(--primary-foreground)",
@@ -151,7 +151,7 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
                 fontWeight: 600,
               }}
             >
-              Connect via macOS app (Demo Session)
+              Connect via macOS app
             </a>
           )}
           {currentState === "ACTIVE" && (
