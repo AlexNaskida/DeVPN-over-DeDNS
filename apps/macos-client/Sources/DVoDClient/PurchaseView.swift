@@ -1,14 +1,17 @@
 import SwiftUI
 
 /// UI-only: this app has no wallet/signing access (see WalletState.swift), so
-/// there is no real purchase flow here - each tier's button just opens the web
+/// there is no real purchase flow here - "Buy in Web App" just opens the web
 /// app, where buying a session actually happens today. Shown so the shape of
 /// in-app purchasing is present for the demo narrative, without pretending a
 /// native payment flow exists yet.
 struct PurchaseView: View {
+    @State private var selectedTier: Tier?
+    @State private var hours: Double = 1
+
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 28) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Purchase a session")
                         .font(.system(size: 22, weight: .bold))
@@ -18,29 +21,78 @@ struct PurchaseView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                ForEach(Tier.allCases) { tier in
-                    tierCard(tier)
+                HStack(alignment: .top, spacing: 20) {
+                    ForEach(Tier.allCases) { tier in
+                        tierCard(tier)
+                    }
                 }
+                // Room for the selected card's 10% scale-up so it doesn't clip
+                // against neighboring content.
+                .padding(.vertical, 14)
+
+                hoursControl
+
+                Button(action: WalletState.openWebApp) {
+                    Text(selectedTier == nil ? "Select a plan" : "Buy in Web App")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .tint(Tokens.primary)
+                .disabled(selectedTier == nil)
             }
             .padding(28)
         }
     }
 
     private func tierCard(_ tier: Tier) -> some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(tier.displayName)
-                    .font(.system(size: 16, weight: .semibold))
-                Text(tier.summary)
+        let isSelected = selectedTier == tier
+        return VStack(alignment: .leading, spacing: 10) {
+            Text(tier.displayName)
+                .font(.system(size: 16, weight: .semibold))
+            Text(tier.summary)
+                .font(.system(size: 12))
+                .foregroundStyle(Tokens.mutedForeground)
+            Spacer(minLength: 12)
+            Text("$\(String(format: "%.2f", tier.pricePerHourUsdc))/hr")
+                .font(.system(size: 18, weight: .bold, design: .monospaced))
+                .foregroundStyle(isSelected ? Tokens.primary : Tokens.foreground)
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, minHeight: 110, alignment: .topLeading)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Tokens.card)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .strokeBorder(isSelected ? Tokens.primary : Tokens.border, lineWidth: isSelected ? 2 : 1),
+                ),
+        )
+        .scaleEffect(isSelected ? 1.1 : 1)
+        .animation(.spring(response: 0.25, dampingFraction: 0.7), value: isSelected)
+        .contentShape(RoundedRectangle(cornerRadius: 12))
+        .onTapGesture {
+            selectedTier = tier
+        }
+    }
+
+    private var hoursControl: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Session duration")
+                    .font(.system(size: 13, weight: .semibold))
+                Spacer()
+                Text("\(Int(hours))h")
+                    .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(Tokens.primary)
+            }
+            Slider(value: $hours, in: 1...24, step: 1)
+                .tint(Tokens.primary)
+            if let selectedTier {
+                Text("Total: $\(String(format: "%.2f", selectedTier.pricePerHourUsdc * hours)) for \(Int(hours))h")
                     .font(.system(size: 12))
                     .foregroundStyle(Tokens.mutedForeground)
             }
-            Spacer()
-            Text("$\(String(format: "%.2f", tier.pricePerHourUsdc))/hr")
-                .font(.system(size: 14, weight: .medium, design: .monospaced))
-            Button("Buy in Web App", action: WalletState.openWebApp)
-                .buttonStyle(.borderedProminent)
-                .tint(Tokens.primary)
         }
         .padding(18)
         .background(
