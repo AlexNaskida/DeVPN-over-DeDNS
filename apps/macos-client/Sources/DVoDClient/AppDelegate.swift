@@ -13,15 +13,17 @@ struct ConnectRequest {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let state = AppState()
+    private let historyStore = ConnectionHistoryStore()
     private lazy var dashboardWindow = DashboardWindowController(
         state: state,
+        historyStore: historyStore,
         onDisconnect: { [weak self] in self?.disconnect() },
-        onQuit: { [weak self] in self?.quit() },
     )
 
     private var proxyServer: LocalProxyServer?
     private var activeNetworkService: String?
     private var expiryTimer: Timer?
+    private var historyEntryId: UUID?
 
     private let localPort: UInt16 = 8899
 
@@ -154,6 +156,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         state.payload = payload
         state.connected = true
         state.now = Date()
+        state.connectedSince = Date()
+        historyEntryId = historyStore.recordConnect(
+            relay: payload?.relay ?? request.host,
+            tier: payload?.tier ?? "unknown",
+        )
         rebuildMenu()
         expiryTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             guard let self else { return }
@@ -173,6 +180,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         activeNetworkService = nil
         state.connected = false
         state.payload = nil
+        state.connectedSince = nil
+        if let id = historyEntryId {
+            historyStore.recordDisconnect(id: id)
+            historyEntryId = nil
+        }
         rebuildMenu()
     }
 
