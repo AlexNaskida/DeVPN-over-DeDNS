@@ -9,22 +9,22 @@ struct RelayView: View {
         VStack(spacing: 16) {
             Image(systemName: "antenna.radiowaves.left.and.right")
                 .font(.system(size: 40))
-                .foregroundStyle(.orange)
+                .foregroundStyle(Tokens.primary)
             Text("Become a Relay")
                 .font(.system(size: 22, weight: .bold))
             Text("Running a relay means operating a long-lived server that stakes collateral and serves other users' sessions - a different role from this client app. Relay registration isn't wired up here yet.")
                 .font(.system(size: 13))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Tokens.mutedForeground)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 360)
                 .fixedSize(horizontal: false, vertical: true)
             Button("Register as Relay") {}
                 .buttonStyle(.borderedProminent)
-                .tint(.orange)
+                .tint(Tokens.primary)
                 .disabled(true)
             Text("Coming soon")
                 .font(.system(size: 11))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Tokens.mutedForeground)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

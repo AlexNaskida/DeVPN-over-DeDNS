@@ -18,10 +18,10 @@ struct HistoryView: View {
                     Spacer()
                     Image(systemName: "clock.arrow.circlepath")
                         .font(.system(size: 32))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Tokens.mutedForeground)
                     Text("No sessions yet on this machine")
                         .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Tokens.mutedForeground)
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -46,25 +46,25 @@ struct HistoryView: View {
                     .font(.system(size: 13, weight: .medium))
                 Text(entry.connectedAt.formatted(date: .abbreviated, time: .shortened))
                     .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Tokens.mutedForeground)
             }
             Spacer()
             Text(entry.tier.capitalized)
                 .font(.system(size: 11, weight: .semibold))
                 .padding(.horizontal, 8)
                 .padding(.vertical, 3)
-                .background(Color.orange.opacity(0.15))
-                .foregroundStyle(.orange)
+                .background(Tokens.secondary)
+                .foregroundStyle(Tokens.secondaryForeground)
                 .clipShape(Capsule())
             Text(durationLabel(entry))
                 .font(.system(size: 12, design: .monospaced))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Tokens.mutedForeground)
                 .frame(width: 70, alignment: .trailing)
         }
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color(red: 0.07, green: 0.09, blue: 0.11)),
+                .fill(Tokens.card),
         )
     }
 
